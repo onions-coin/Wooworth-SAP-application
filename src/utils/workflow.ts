@@ -1,0 +1,70 @@
+export type IssueStatus = 'OPEN' | 'IN_PROGRESS' | 'RESOLVED' | 'VERIFIED';
+export type PickingStatus = 'Not Started' | 'Picked' | 'Issue Reported';
+
+export interface IssueRecord {
+  issueId: string;
+  orderId: string;
+  orderItemId?: string;
+  product: string;
+  issueType: string;
+  severity: string;
+  notes: string;
+  suggestedHandling: string;
+  assignedStaff: string;
+  resolutionNotes: string;
+  status: IssueStatus;
+  createdAt: string;
+  resolvedAt?: string;
+  verifiedAt?: string;
+}
+
+export type PickingProgress = Record<string, Record<string, PickingStatus>>;
+
+export function loadIssues(): IssueRecord[] {
+  try {
+    const stored = localStorage.getItem('woolworths_issues');
+    const issues = stored ? JSON.parse(stored) : [];
+    return Array.isArray(issues) ? issues.map((issue) => ({
+      severity: 'Medium',
+      notes: '',
+      suggestedHandling: '',
+      resolutionNotes: '',
+      assignedStaff: '',
+      ...issue,
+    })) : [];
+  } catch {
+    return [];
+  }
+}
+
+export function saveIssues(issues: IssueRecord[]) {
+  localStorage.setItem('woolworths_issues', JSON.stringify(issues));
+}
+
+export function loadPickingProgress(): PickingProgress {
+  try {
+    const stored = localStorage.getItem('woolworths_picking_progress');
+    return stored ? JSON.parse(stored) : {};
+  } catch {
+    return {};
+  }
+}
+
+export function savePickingProgress(progress: PickingProgress) {
+  localStorage.setItem('woolworths_picking_progress', JSON.stringify(progress));
+}
+
+export function loadCompletedOrderIds(): string[] {
+  try {
+    const stored = localStorage.getItem('woolworths_completed_orders');
+    return stored ? JSON.parse(stored) : [];
+  } catch {
+    return [];
+  }
+}
+
+export function markOrderComplete(orderId: string) {
+  const completed = new Set(loadCompletedOrderIds());
+  completed.add(String(orderId));
+  localStorage.setItem('woolworths_completed_orders', JSON.stringify([...completed]));
+}
