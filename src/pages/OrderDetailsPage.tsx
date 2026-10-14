@@ -127,8 +127,8 @@ const OrderDetailsPage: React.FC = () => {
 
   const canComplete = Boolean(order && !completed && order.Items.length > 0 &&
     order.Items.every((item) => pickingProgress[item.SalesOrderItem] === 'Picked') &&
-    orderIssues.every((issue) => issue.status === 'VERIFIED'));
-  const waitingOnIssue = orderIssues.some((issue) => issue.status !== 'VERIFIED');
+    orderIssues.every((issue) => issue.status === 'RESOLVED'));
+  const waitingOnIssue = orderIssues.some((issue) => issue.status !== 'RESOLVED');
 
   const completeOrder = () => {
     markOrderComplete(orderId);
@@ -146,9 +146,9 @@ const OrderDetailsPage: React.FC = () => {
       <nav aria-label="breadcrumb"><ol className="breadcrumb"><li className="breadcrumb-item"><Link to="/">Orders</Link></li><li className="breadcrumb-item active">Order {order.SalesOrderID}</li></ol></nav>
       <div className="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
         <div>
-          <div className="text-primary fw-semibold">{completed ? 'Complete' : canComplete ? 'Picker · Step 4 of 4' : waitingOnIssue ? 'Supervisor · Step 3 of 4' : 'Picker · Step 2 of 4'}</div>
+          <div className="text-primary fw-semibold">{completed ? 'Complete' : canComplete ? 'Picker · Ready to complete' : waitingOnIssue ? 'Issue handling · Steps 2–3 of 4' : 'Picker · Step 1 of 4'}</div>
           <h2>Order {order.SalesOrderID}</h2>
-          <p className="text-muted mb-0">{completed ? 'This order is complete.' : waitingOnIssue ? 'A reported shelf issue must be assigned, resolved, and verified before picking can continue.' : canComplete ? 'All items are picked and issues are verified. You can complete this order.' : 'Pick each item. Report any shelf issue from its row.'}</p>
+          <p className="text-muted mb-0">{completed ? 'This order is complete.' : waitingOnIssue ? 'A reported shelf issue must be assigned and resolved by the Team before picking can continue.' : canComplete ? 'All items are picked and reported issues are resolved. You can complete this order.' : 'Pick each item. Report any shelf issue from its row.'}</p>
         </div>
         <span className={`badge fs-6 ${completed ? 'bg-success' : 'bg-secondary'}`}>{completed ? 'Completed' : 'In progress'}</span>
       </div>
@@ -168,7 +168,7 @@ const OrderDetailsPage: React.FC = () => {
           <thead><tr><th>Product</th><th>Code</th><th>Qty</th><th>Amount</th><th>Status</th><th>Next step</th></tr></thead>
           <tbody>{order.Items.map((item) => {
             const status = pickingProgress[item.SalesOrderItem] || 'Not Started';
-            const itemIssue = orderIssues.find((issue) => issue.orderItemId === item.SalesOrderItem && issue.status !== 'VERIFIED');
+            const itemIssue = orderIssues.find((issue) => issue.orderItemId === item.SalesOrderItem && issue.status !== 'RESOLVED');
             const displayStatus = itemIssue ? `Issue ${itemIssue.status.replace('_', ' ')}` : status === 'Issue Reported' ? 'Ready to pick' : status;
             return <tr key={item.SalesOrderItem}>
               <td>{item.ProductName}</td><td>{item.ProductCode}</td><td>{item.RequestedQuantity}</td><td>{item.NetAmount} {item.Currency}</td>
@@ -188,12 +188,12 @@ const OrderDetailsPage: React.FC = () => {
         <div className="card-header"><h5 className="mb-0">Issues for this order</h5></div>
         <ul className="list-group list-group-flush">{orderIssues.map((issue) => <li className="list-group-item d-flex flex-wrap justify-content-between gap-2" key={issue.issueId}>
           <div><strong>{issue.product}</strong><div className="text-muted">{issue.issueType}</div>{issue.resolutionNotes && <div><strong>Handling result:</strong> {issue.resolutionNotes}</div>}</div>
-          <span className={`badge align-self-start ${issue.status === 'VERIFIED' ? 'bg-success' : 'bg-warning text-dark'}`}>{issue.status.replace('_', ' ')}</span>
+          <span className={`badge align-self-start ${issue.status === 'RESOLVED' ? 'bg-success' : 'bg-warning text-dark'}`}>{issue.status.replace('_', ' ')}</span>
         </li>)}</ul>
       </section>}
 
       {!completed && <div className="card border-primary mb-4"><div className="card-body d-flex flex-wrap justify-content-between align-items-center gap-3">
-        <div><h5 className="mb-1">Complete this order</h5><p className="mb-0 text-muted">All items must be picked and every reported issue verified.</p></div>
+        <div><h5 className="mb-1">Complete this order</h5><p className="mb-0 text-muted">All items must be picked and every reported issue resolved.</p></div>
         <button className="btn btn-primary" disabled={!canComplete} onClick={completeOrder}>Complete order</button>
       </div></div>}
     </div>

@@ -1,14 +1,27 @@
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
+import React, { useState } from 'react';
+import { BrowserRouter as Router, Routes, Route, Link, useLocation, useNavigate } from 'react-router-dom';
 import OrdersPage from './pages/OrdersPage';
 import OrderDetailsPage from './pages/OrderDetailsPage';
 import ReportIssuePage from './pages/ReportIssuePage';
 import IssueManagementPage from './pages/IssueManagementPage';
+import TeamWorkPage from './pages/TeamWorkPage';
 import SupervisorDashboard from './pages/SupervisorDashboard';
 
-const App: React.FC = () => {
+type Role = 'staff' | 'supervisor';
+
+const AppContent: React.FC = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [role, setRole] = useState<Role>(() => localStorage.getItem('woolworths_user_role') === 'supervisor' ? 'supervisor' : 'staff');
+
+  const changeRole = (nextRole: Role) => {
+    setRole(nextRole);
+    localStorage.setItem('woolworths_user_role', nextRole);
+    navigate(nextRole === 'staff' ? '/' : '/issue-management');
+  };
+
   return (
-    <Router>
+    <>
       <nav className="navbar navbar-expand-lg navbar-dark bg-dark">
         <div className="container-fluid">
           <Link className="navbar-brand" to="/">
@@ -19,16 +32,21 @@ const App: React.FC = () => {
           </button>
           <div className="collapse navbar-collapse" id="navbar-nav">
             <ul className="navbar-nav me-auto">
-              <li className="nav-item">
-                <Link className="nav-link" to="/">1 · Picker: Orders</Link>
-              </li>
-              <li className="nav-item">
-                <Link className="nav-link" to="/issue-management">2 · Supervisor: Issues</Link>
-              </li>
-              <li className="nav-item">
-                <Link className="nav-link" to="/supervisor-dashboard">3 · Supervisor: Dashboard</Link>
-              </li>
+              {role === 'staff' ? <>
+                <li className="nav-item"><Link className={`nav-link ${location.pathname === '/' || location.pathname === '/order-details' ? 'active' : ''}`} to="/">Orders</Link></li>
+                <li className="nav-item"><Link className={`nav-link ${location.pathname === '/team-work' ? 'active' : ''}`} to="/team-work">Team issue work</Link></li>
+              </> : <>
+                <li className="nav-item"><Link className={`nav-link ${location.pathname === '/issue-management' ? 'active' : ''}`} to="/issue-management">Issue assignment</Link></li>
+                <li className="nav-item"><Link className={`nav-link ${location.pathname === '/supervisor-dashboard' ? 'active' : ''}`} to="/supervisor-dashboard">Dashboard</Link></li>
+              </>}
             </ul>
+            <div className="d-flex align-items-center gap-2 mt-2 mt-lg-0">
+              <label className="text-white-50 small mb-0" htmlFor="role-select">View as</label>
+              <select id="role-select" className="form-select form-select-sm" value={role} onChange={(event) => changeRole(event.target.value as Role)} aria-label="Choose staff or supervisor view">
+                <option value="staff">Staff</option>
+                <option value="supervisor">Supervisor</option>
+              </select>
+            </div>
           </div>
         </div>
       </nav>
@@ -39,11 +57,14 @@ const App: React.FC = () => {
           <Route path="/order-details" element={<OrderDetailsPage />} />
           <Route path="/report-issue" element={<ReportIssuePage />} />
           <Route path="/issue-management" element={<IssueManagementPage />} />
+          <Route path="/team-work" element={<TeamWorkPage />} />
           <Route path="/supervisor-dashboard" element={<SupervisorDashboard />} />
         </Routes>
       </div>
-    </Router>
+    </>
   );
 };
+
+const App: React.FC = () => <Router><AppContent /></Router>;
 
 export default App;

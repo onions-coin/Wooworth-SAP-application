@@ -1,4 +1,4 @@
-export type IssueStatus = 'OPEN' | 'ASSIGNED' | 'IN_PROGRESS' | 'RESOLVED' | 'VERIFIED';
+export type IssueStatus = 'OPEN' | 'ASSIGNED' | 'IN_PROGRESS' | 'RESOLVED';
 export type PickingStatus = 'Not Started' | 'Picked' | 'Issue Reported';
 
 export interface IssueRecord {
@@ -12,7 +12,6 @@ export interface IssueRecord {
   status: IssueStatus;
   createdAt: string;
   resolvedAt?: string;
-  verifiedAt?: string;
 }
 
 export type PickingProgress = Record<string, Record<string, PickingStatus>>;
@@ -25,6 +24,9 @@ export function loadIssues(): IssueRecord[] {
       resolutionNotes: '',
       assignedStaff: '',
       ...issue,
+      // Older versions required a separate verification step. In the new flow,
+      // resolved means the team has finished and the supervisor can see the result.
+      status: issue.status === 'VERIFIED' ? 'RESOLVED' : issue.status,
     })) : [];
   } catch {
     return [];
