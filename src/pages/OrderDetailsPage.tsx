@@ -24,6 +24,7 @@ interface OrderItem {
 interface OrderDetails {
   SalesOrderID: string;
   CustomerID: string;
+  CustomerName: string;
   OrderDate: string;
   TotalAmount: number;
   Currency: string;
@@ -51,22 +52,46 @@ const OrderDetailsPage: React.FC = () => {
     setLoading(true);
     setError(null);
     try {
-      const [itemsResponse, headerResponse] = await Promise.all([
+      const [itemsResponse, headerResponse, partnersResponse] = await Promise.all([
         axios.get<{ value: any[] }>(`/api/salesorders/${encodeURIComponent(orderId)}/_Item`),
         axios.get(`/api/salesorders/${encodeURIComponent(orderId)}`),
+        axios.get<{ value: any[] }>(`/api/salesorders/${encodeURIComponent(orderId)}/_Partner`),
       ]);
-      const items: OrderItem[] = (itemsResponse.data?.value || []).map((item: any) => ({
-        ProductName: item.ProductName || item.SalesOrderItemText || item.Product || 'Unknown Product',
+      const rawItems: any[] = itemsResponse.data?.value || [];
+      const header = headerResponse.data as any;
+
+      // Master data enriches each order line; if one lookup fails, keep its order text and code.
+      const enrichedItems = await Promise.all(rawItems.map(async (item) => {
+        const productCode = String(item.ProductCode || item.ProductID || item.Product || '');
+        if (!productCode) return item;
+        try {
+          const response = await axios.get<any>(`/api/products/${encodeURIComponent(productCode)}`, { params: { language: 'EN' } });
+          return { ...item, ProductMasterDescription: response.data?.ProductDescription };
+        } catch {
+          return item;
+        }
+      }));
+      const items: OrderItem[] = enrichedItems.map((item: any) => ({
+        ProductName: item.ProductMasterDescription || item.ProductName || item.SalesOrderItemText || item.Product || 'Unknown Product',
         ProductCode: item.ProductCode || item.ProductID || item.Product || '',
         RequestedQuantity: item.RequestedQuantity ?? 1,
         NetAmount: item.NetAmount ?? 0,
         Currency: item.Currency || item.TransactionCurrency || 'NZD',
         SalesOrderItem: String(item.SalesOrderItem ?? item.ItemNumber ?? item.Product),
       }));
-      const header = headerResponse.data as any;
+      const customerId = String(header.CustomerID || header.SoldToParty || '');
+      const soldToPartner = (partnersResponse.data?.value || []).find((partner: any) =>
+        partner.PartnerFunction === 'AG' ||
+        String(partner.Customer || partner.ReferenceBusinessPartner || '') === customerId
+      );
+      const customerName = soldToPartner
+        ? [soldToPartner.BusinessPartnerName1, soldToPartner.BusinessPartnerName2, soldToPartner.BusinessPartnerName3, soldToPartner.BusinessPartnerName4]
+            .filter(Boolean).join(' ')
+        : '';
       setOrder({
         SalesOrderID: orderId,
-        CustomerID: header.CustomerID || header.SoldToParty || '',
+        CustomerID: customerId,
+        CustomerName: customerName,
         OrderDate: header.OrderDate || header.SalesOrderDate || '',
         TotalAmount: header.TotalAmount ?? header.TotalNetAmount ?? 0,
         Currency: header.Currency || header.TransactionCurrency || 'NZD',
@@ -103,6 +128,7 @@ const OrderDetailsPage: React.FC = () => {
   const canComplete = Boolean(order && !completed && order.Items.length > 0 &&
     order.Items.every((item) => pickingProgress[item.SalesOrderItem] === 'Picked') &&
     orderIssues.every((issue) => issue.status === 'VERIFIED'));
+  const waitingOnIssue = orderIssues.some((issue) => issue.status !== 'VERIFIED');
 
   const completeOrder = () => {
     markOrderComplete(orderId);
@@ -119,13 +145,17 @@ const OrderDetailsPage: React.FC = () => {
     <div className="container mt-4">
       <nav aria-label="breadcrumb"><ol className="breadcrumb"><li className="breadcrumb-item"><Link to="/">Orders</Link></li><li className="breadcrumb-item active">Order {order.SalesOrderID}</li></ol></nav>
       <div className="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
-        <div><h2>Order {order.SalesOrderID}</h2><p className="text-muted mb-0">Pick each item. If there is a problem, report it here and resolve it before completing the order.</p></div>
+        <div>
+          <div className="text-primary fw-semibold">{completed ? 'Complete' : canComplete ? 'Picker · Step 4 of 4' : waitingOnIssue ? 'Supervisor · Step 3 of 4' : 'Picker · Step 2 of 4'}</div>
+          <h2>Order {order.SalesOrderID}</h2>
+          <p className="text-muted mb-0">{completed ? 'This order is complete.' : waitingOnIssue ? 'A reported shelf issue must be assigned, resolved, and verified before picking can continue.' : canComplete ? 'All items are picked and issues are verified. You can complete this order.' : 'Pick each item. Report any shelf issue from its row.'}</p>
+        </div>
         <span className={`badge fs-6 ${completed ? 'bg-success' : 'bg-secondary'}`}>{completed ? 'Completed' : 'In progress'}</span>
       </div>
 
       <section className="card shadow-sm mb-4">
         <div className="card-body row g-3">
-          <div className="col-md-3"><strong>Customer</strong><div>{order.CustomerID || 'N/A'}</div></div>
+          <div className="col-md-3"><strong>Customer</strong><div>{order.CustomerName || order.CustomerID || 'N/A'}</div>{order.CustomerName && <small className="text-muted">{order.CustomerID}</small>}</div>
           <div className="col-md-3"><strong>Order date</strong><div>{order.OrderDate || 'N/A'}</div></div>
           <div className="col-md-3"><strong>Total</strong><div>{order.TotalAmount} {order.Currency}</div></div>
           <div className="col-md-3"><strong>Items picked</strong><div>{order.Items.filter((item) => pickingProgress[item.SalesOrderItem] === 'Picked').length} / {order.Items.length}</div></div>
@@ -157,7 +187,7 @@ const OrderDetailsPage: React.FC = () => {
       {orderIssues.length > 0 && <section className="card shadow-sm mb-4">
         <div className="card-header"><h5 className="mb-0">Issues for this order</h5></div>
         <ul className="list-group list-group-flush">{orderIssues.map((issue) => <li className="list-group-item d-flex flex-wrap justify-content-between gap-2" key={issue.issueId}>
-          <div><strong>{issue.product}</strong><div className="text-muted">{issue.issueType} · {issue.severity} · {issue.notes}</div>{issue.resolutionNotes && <div><strong>Handling:</strong> {issue.resolutionNotes}</div>}</div>
+          <div><strong>{issue.product}</strong><div className="text-muted">{issue.issueType}</div>{issue.resolutionNotes && <div><strong>Handling result:</strong> {issue.resolutionNotes}</div>}</div>
           <span className={`badge align-self-start ${issue.status === 'VERIFIED' ? 'bg-success' : 'bg-warning text-dark'}`}>{issue.status.replace('_', ' ')}</span>
         </li>)}</ul>
       </section>}

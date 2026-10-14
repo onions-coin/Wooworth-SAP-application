@@ -2,55 +2,44 @@ import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { IssueRecord, loadIssues, loadPickingProgress, saveIssues, savePickingProgress } from '../utils/workflow';
 
-const IssueTypes = ['Shelf Gap', 'Price Discrepancy', 'Wrong Product', 'Damaged Product', 'Other'];
-const Severities = ['Low', 'Medium', 'High', 'Critical'];
+const IssueTypes = [
+  'Online vs shelf price mismatch',
+  'Out of stock / low shelf stock',
+  'Sub-shelf display or replenishment shortage',
+  'Product quality issue',
+];
 
 const ReportIssuePage: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const routeState = (location.state || {}) as {
-    orderId?: string;
-    orderItemId?: string;
-    product?: string;
-  };
-  const [orderId, setOrderId] = useState(routeState.orderId || new URLSearchParams(location.search).get('orderId') || '');
-  const [product, setProduct] = useState(routeState.product || '');
-  const [issueType, setIssueType] = useState(IssueTypes[0]);
-  const [severity, setSeverity] = useState('Medium');
-  const [description, setDescription] = useState('');
-  const [suggestedHandling, setSuggestedHandling] = useState('');
-  const [error, setError] = useState('');
+  const routeState = (location.state || {}) as { orderId?: string; orderItemId?: string; product?: string };
+  const orderId = routeState.orderId || new URLSearchParams(location.search).get('orderId') || '';
+  const [issueType, setIssueType] = useState('');
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    setError('');
+  if (!orderId) {
+    return <div className="container mt-4"><div className="alert alert-warning">Open an order and choose an item before reporting an issue.</div><Link className="btn btn-primary" to="/">Go to orders</Link></div>;
+  }
+
+  const submitIssue = () => {
+    if (!issueType) return;
     const issue: IssueRecord = {
       issueId: `ISSUE-${Date.now()}`,
-      orderId: orderId.trim(),
+      orderId,
       orderItemId: routeState.orderItemId,
-      product: product.trim(),
+      product: routeState.product || 'Item not specified',
       issueType,
-      severity,
-      notes: description.trim(),
-      suggestedHandling: suggestedHandling.trim(),
       assignedStaff: '',
       resolutionNotes: '',
       status: 'OPEN',
       createdAt: new Date().toISOString(),
     };
-
-    const issues = loadIssues();
-    saveIssues([...issues, issue]);
+    saveIssues([...loadIssues(), issue]);
 
     if (issue.orderItemId) {
       const progress = loadPickingProgress();
-      progress[issue.orderId] = {
-        ...(progress[issue.orderId] || {}),
-        [issue.orderItemId]: 'Issue Reported',
-      };
+      progress[orderId] = { ...(progress[orderId] || {}), [issue.orderItemId]: 'Issue Reported' };
       savePickingProgress(progress);
     }
-
     navigate('/issue-management', { state: { newIssueId: issue.issueId } });
   };
 
@@ -59,62 +48,36 @@ const ReportIssuePage: React.FC = () => {
       <nav aria-label="breadcrumb">
         <ol className="breadcrumb">
           <li className="breadcrumb-item"><Link to="/">Orders</Link></li>
-          {orderId && (
-            <li className="breadcrumb-item">
-              <Link to={`/order-details?orderId=${encodeURIComponent(orderId)}`}>Order {orderId}</Link>
-            </li>
-          )}
-          <li className="breadcrumb-item active" aria-current="page">Report Issue</li>
+          <li className="breadcrumb-item"><Link to={`/order-details?orderId=${encodeURIComponent(orderId)}`}>Order {orderId}</Link></li>
+          <li className="breadcrumb-item active" aria-current="page">Report shelf issue</li>
         </ol>
       </nav>
 
-      <div className="mb-4">
-        <h2>Report an order issue</h2>
-        <p className="text-muted mb-0">Describe what happened and what action may resolve it. The issue will be tracked through assignment, resolution, and verification.</p>
-      </div>
-
-      <form className="card shadow-sm" onSubmit={handleSubmit}>
+      <div className="text-primary fw-semibold">Picker · Step 2 of 4</div><h2>Report a product / shelf issue</h2>
+      <p className="text-muted">Report a shelf issue. The order and item are already attached.</p>
+      <div className="card shadow-sm">
         <div className="card-body">
-          {error && <div className="alert alert-danger">{error}</div>}
-          <div className="row g-3">
-            <div className="col-md-6">
-              <label htmlFor="issue-order" className="form-label">Order ID</label>
-              <input id="issue-order" className="form-control" value={orderId} onChange={(event) => setOrderId(event.target.value)} required />
-            </div>
-            <div className="col-md-6">
-              <label htmlFor="issue-product" className="form-label">Product / item</label>
-              <input id="issue-product" className="form-control" value={product} onChange={(event) => setProduct(event.target.value)} required />
-            </div>
-            <div className="col-md-6">
-              <label htmlFor="issue-type" className="form-label">Issue type</label>
-              <select id="issue-type" className="form-select" value={issueType} onChange={(event) => setIssueType(event.target.value)}>
-                {IssueTypes.map((type) => <option key={type}>{type}</option>)}
-              </select>
-            </div>
-            <div className="col-md-6">
-              <label htmlFor="issue-severity" className="form-label">Priority</label>
-              <select id="issue-severity" className="form-select" value={severity} onChange={(event) => setSeverity(event.target.value)}>
-                {Severities.map((level) => <option key={level}>{level}</option>)}
-              </select>
-            </div>
-            <div className="col-12">
-              <label htmlFor="issue-description" className="form-label">What happened?</label>
-              <textarea id="issue-description" className="form-control" rows={4} value={description} onChange={(event) => setDescription(event.target.value)} placeholder="Include what you observed, when it happened, and any impact on the order." required />
-            </div>
-            <div className="col-12">
-              <label htmlFor="issue-handling" className="form-label">Suggested handling / action needed</label>
-              <textarea id="issue-handling" className="form-control" rows={3} value={suggestedHandling} onChange={(event) => setSuggestedHandling(event.target.value)} placeholder="For example: check the back room, confirm the shelf label, or replace the damaged item." required />
-            </div>
+          <div className="row g-3 mb-4">
+            <div className="col-md-6"><div className="rounded border p-3"><small className="text-muted d-block">Order</small><strong>{orderId}</strong></div></div>
+            <div className="col-md-6"><div className="rounded border p-3"><small className="text-muted d-block">Item</small><strong>{routeState.product || 'Item not specified'}</strong></div></div>
           </div>
+
+          <fieldset>
+            <legend className="fs-6 fw-semibold mb-3">Choose an issue type</legend>
+            <div className="row row-cols-1 row-cols-sm-2 g-2">
+              {IssueTypes.map((type) => (
+                <div className="col" key={type}>
+                  <button type="button" className={`btn w-100 text-start ${issueType === type ? 'btn-primary' : 'btn-outline-secondary'}`} aria-pressed={issueType === type} onClick={() => setIssueType(type)}>{type}</button>
+                </div>
+              ))}
+            </div>
+          </fieldset>
         </div>
         <div className="card-footer d-flex justify-content-between align-items-center">
-          <small className="text-muted">This item will remain blocked from picking until its issue is verified.</small>
-          <div className="d-flex gap-2">
-            <button type="button" className="btn btn-outline-secondary" onClick={() => orderId ? navigate(`/order-details?orderId=${encodeURIComponent(orderId)}`) : navigate('/')}>Cancel</button>
-            <button type="submit" className="btn btn-primary">Submit issue</button>
-          </div>
+          <button type="button" className="btn btn-link" onClick={() => navigate(`/order-details?orderId=${encodeURIComponent(orderId)}`)}>Cancel</button>
+          <button type="button" className="btn btn-primary" disabled={!issueType} onClick={submitIssue}>Submit issue</button>
         </div>
-      </form>
+      </div>
     </div>
   );
 };

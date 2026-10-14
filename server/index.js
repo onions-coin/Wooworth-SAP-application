@@ -11,16 +11,18 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // SAP API Configuration
-const SAP_BASE_URL = 'https://sandbox.api.sap.com/s4hanacloud/sap/opu/odata4/sap/api_salesorder/srvd_a2x/sap/salesorder/0001';
+const SAP_HOST = 'https://sandbox.api.sap.com/s4hanacloud';
+const SAP_BASE_URL = `${SAP_HOST}/sap/opu/odata4/sap/api_salesorder/srvd_a2x/sap/salesorder/0001`;
+const SAP_PRODUCT_BASE_URL = `${SAP_HOST}/sap/opu/odata4/sap/api_product/srvd_a2x/sap/product/0003`;
 const SAP_API_KEY = process.env.SAP_API_KEY;
 
 // Helper function to make SAP API requests
-async function sapFetch(endpoint) {
+async function sapFetchFrom(baseUrl, endpoint) {
   if (!SAP_API_KEY) {
     throw new Error('SAP API key not configured. Please set SAP_API_KEY in server/.env');
   }
 
-  const url = `${SAP_BASE_URL}${endpoint}`;
+  const url = `${baseUrl}${endpoint}`;
   const response = await fetch(url, {
     method: 'GET',
     headers: {
@@ -41,6 +43,42 @@ async function sapFetch(endpoint) {
     return data;
   }
 }
+
+async function sapFetch(endpoint) {
+  return sapFetchFrom(SAP_BASE_URL, endpoint);
+}
+
+function escapeODataKey(value) {
+  return String(value).replace(/'/g, "''");
+}
+
+// GET /api/products/:product - Read one product description from SAP Product Master
+app.get('/api/products/:product', async (req, res) => {
+  try {
+    const product = escapeODataKey(req.params.product);
+    const language = escapeODataKey(req.query.language || 'EN');
+    const data = await sapFetchFrom(
+      SAP_PRODUCT_BASE_URL,
+      `/ProductDescription(Product='${product}',Language='${language}')`
+    );
+    res.json(data);
+  } catch (error) {
+    console.error(`Error fetching product ${req.params.product}:`, error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// GET /api/salesorders/:salesOrder/_Partner - Read partners from the Sales Order OData V4 API
+app.get('/api/salesorders/:salesOrder/_Partner', async (req, res) => {
+  const salesOrder = escapeODataKey(req.params.salesOrder);
+  try {
+    const data = await sapFetch(`/SalesOrder('${salesOrder}')/_Partner`);
+    res.json(data);
+  } catch (error) {
+    console.error(`Error fetching partners for sales order ${salesOrder}:`, error);
+    res.status(500).json({ error: error.message });
+  }
+});
 
 // GET /api/salesorders - Retrieve sales orders from SAP Sandbox
 app.get('/api/salesorders', async (req, res) => {

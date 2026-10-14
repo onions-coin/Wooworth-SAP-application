@@ -10,6 +10,7 @@ interface OrderSummary {
 
 const statusColors: Record<IssueStatus, string> = {
   OPEN: 'danger',
+  ASSIGNED: 'info text-dark',
   IN_PROGRESS: 'warning text-dark',
   RESOLVED: 'success',
   VERIFIED: 'primary',
@@ -52,6 +53,7 @@ const SupervisorDashboard: React.FC = () => {
 
   const counts = useMemo(() => ({
     OPEN: issues.filter((issue) => issue.status === 'OPEN').length,
+    ASSIGNED: issues.filter((issue) => issue.status === 'ASSIGNED').length,
     IN_PROGRESS: issues.filter((issue) => issue.status === 'IN_PROGRESS').length,
     RESOLVED: issues.filter((issue) => issue.status === 'RESOLVED').length,
     VERIFIED: issues.filter((issue) => issue.status === 'VERIFIED').length,
@@ -65,7 +67,7 @@ const SupervisorDashboard: React.FC = () => {
       <nav aria-label="breadcrumb"><ol className="breadcrumb"><li className="breadcrumb-item"><Link to="/">Orders</Link></li><li className="breadcrumb-item active">Supervisor Dashboard</li></ol></nav>
       <div className="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
         <div><h2>Supervisor Dashboard</h2><p className="text-muted">Live summary of order completion and issue handling.</p></div>
-        <Link className="btn btn-outline-primary" to="/issue-management">Open issue management</Link>
+        <Link className="btn btn-outline-primary" to="/issue-management">View product / shelf issues</Link>
       </div>
       {error && <div className="alert alert-warning">Order totals could not be refreshed: {error}</div>}
 
@@ -73,6 +75,7 @@ const SupervisorDashboard: React.FC = () => {
         <div className="col-sm-6 col-xl-3"><div className="card h-100"><div className="card-body"><div className="text-muted">Total orders</div><div className="display-6">{loading ? '…' : orders.length}</div></div></div></div>
         <div className="col-sm-6 col-xl-3"><div className="card h-100 border-success"><div className="card-body"><div className="text-muted">Completed orders</div><div className="display-6 text-success">{loading ? '…' : completedOrders}</div></div></div></div>
         <div className="col-sm-6 col-xl-3"><div className="card h-100 border-danger"><div className="card-body"><div className="text-muted">Open issues</div><div className="display-6 text-danger">{counts.OPEN}</div></div></div></div>
+        <div className="col-sm-6 col-xl-3"><div className="card h-100 border-info"><div className="card-body"><div className="text-muted">Assigned</div><div className="display-6">{counts.ASSIGNED}</div></div></div></div>
         <div className="col-sm-6 col-xl-3"><div className="card h-100 border-warning"><div className="card-body"><div className="text-muted">In progress</div><div className="display-6">{counts.IN_PROGRESS}</div></div></div></div>
       </div>
 
@@ -86,13 +89,12 @@ const SupervisorDashboard: React.FC = () => {
         <div className="card-header d-flex justify-content-between align-items-center"><h5 className="mb-0">Recent issues</h5><Link to="/issue-management">View all</Link></div>
         <div className="card-body p-0">
           {recentIssues.length === 0 ? <p className="text-muted p-3 mb-0">No issues have been reported.</p> : <div className="table-responsive"><table className="table table-hover align-middle mb-0">
-            <thead><tr><th>Issue</th><th>Order / product</th><th>Priority</th><th>Status</th><th>Handling</th></tr></thead>
+            <thead><tr><th>Issue</th><th>Order / product</th><th>Status</th><th>Handling</th></tr></thead>
             <tbody>{recentIssues.map((issue) => <tr key={issue.issueId}>
               <td>{issue.issueType}<div className="small text-muted">{issue.issueId}</div></td>
               <td><Link to={`/order-details?orderId=${encodeURIComponent(issue.orderId)}`}>Order {issue.orderId}</Link><div className="small text-muted">{issue.product}</div></td>
-              <td>{issue.severity}</td>
-              <td><span className={`badge bg-${statusColors[issue.status]}`}>{issue.status.replace('_', ' ')}</span></td>
-              <td>{issue.resolutionNotes || issue.suggestedHandling || 'Not recorded'}</td>
+              <td><span className={`badge bg-${statusColors[issue.status]}`}>{issue.status === 'OPEN' ? 'Reported' : issue.status.replace('_', ' ')}</span></td>
+              <td>{issue.resolutionNotes || 'Not recorded'}</td>
             </tr>)}</tbody>
           </table></div>}
         </div>
@@ -101,7 +103,7 @@ const SupervisorDashboard: React.FC = () => {
       <section className="card shadow-sm">
         <div className="card-header"><h5 className="mb-0">Issue status breakdown</h5></div>
         <div className="card-body">
-          {totalIssues === 0 ? <p className="text-muted mb-0">Status breakdown will appear when issues are reported.</p> : (['OPEN', 'IN_PROGRESS', 'RESOLVED', 'VERIFIED'] as IssueStatus[]).map((status) => <div className="mb-3" key={status}>
+          {totalIssues === 0 ? <p className="text-muted mb-0">Status breakdown will appear when issues are reported.</p> : (['OPEN', 'ASSIGNED', 'IN_PROGRESS', 'RESOLVED', 'VERIFIED'] as IssueStatus[]).map((status) => <div className="mb-3" key={status}>
             <div className="d-flex justify-content-between mb-1"><span>{status.replace('_', ' ')}</span><span>{counts[status]} / {totalIssues}</span></div>
             <div className="progress" role="progressbar" aria-valuenow={counts[status]} aria-valuemin={0} aria-valuemax={totalIssues}>
               <div className={`progress-bar bg-${statusColors[status]}`} style={{ width: `${(counts[status] / totalIssues) * 100}%` }} />

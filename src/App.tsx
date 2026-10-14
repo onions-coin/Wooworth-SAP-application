@@ -20,13 +20,13 @@ const App: React.FC = () => {
           <div className="collapse navbar-collapse" id="navbar-nav">
             <ul className="navbar-nav me-auto">
               <li className="nav-item">
-                <Link className="nav-link" to="/">Orders</Link>
+                <Link className="nav-link" to="/">1 · Picker: Orders</Link>
               </li>
               <li className="nav-item">
-                <Link className="nav-link" to="/issue-management">Issue Management</Link>
+                <Link className="nav-link" to="/issue-management">2 · Supervisor: Issues</Link>
               </li>
               <li className="nav-item">
-                <Link className="nav-link" to="/supervisor-dashboard">Supervisor Dashboard</Link>
+                <Link className="nav-link" to="/supervisor-dashboard">3 · Supervisor: Dashboard</Link>
               </li>
             </ul>
           </div>

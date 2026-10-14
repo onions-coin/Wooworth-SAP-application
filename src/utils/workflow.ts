@@ -1,4 +1,4 @@
-export type IssueStatus = 'OPEN' | 'IN_PROGRESS' | 'RESOLVED' | 'VERIFIED';
+export type IssueStatus = 'OPEN' | 'ASSIGNED' | 'IN_PROGRESS' | 'RESOLVED' | 'VERIFIED';
 export type PickingStatus = 'Not Started' | 'Picked' | 'Issue Reported';
 
 export interface IssueRecord {
@@ -7,9 +7,6 @@ export interface IssueRecord {
   orderItemId?: string;
   product: string;
   issueType: string;
-  severity: string;
-  notes: string;
-  suggestedHandling: string;
   assignedStaff: string;
   resolutionNotes: string;
   status: IssueStatus;
@@ -25,9 +22,6 @@ export function loadIssues(): IssueRecord[] {
     const stored = localStorage.getItem('woolworths_issues');
     const issues = stored ? JSON.parse(stored) : [];
     return Array.isArray(issues) ? issues.map((issue) => ({
-      severity: 'Medium',
-      notes: '',
-      suggestedHandling: '',
       resolutionNotes: '',
       assignedStaff: '',
       ...issue,
