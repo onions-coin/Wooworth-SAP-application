@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { IssueRecord, loadIssues, loadPickingProgress, recordPriceCheck, saveIssues, savePickingProgress } from '../utils/workflow';
+import { IssueRecord, loadIssues, loadPickingProgress, PriceImpact, recordPriceCheck, saveIssues, savePickingProgress } from '../utils/workflow';
 
 const IssueTypes = [
   'Online vs shelf price mismatch',
@@ -12,10 +12,13 @@ const IssueTypes = [
 const ReportIssuePage: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const routeState = (location.state || {}) as { orderId?: string; orderItemId?: string; product?: string; onlinePrice?: number };
+  const routeState = (location.state || {}) as { orderId?: string; orderItemId?: string; product?: string; onlinePrice?: number; currency?: string };
   const orderId = routeState.orderId || new URLSearchParams(location.search).get('orderId') || '';
   const [issueType, setIssueType] = useState('');
   const [shelfPrice, setShelfPrice] = useState('');
+  const [priceImpact, setPriceImpact] = useState<PriceImpact | ''>('');
+  const isPriceIssue = issueType.toLowerCase().includes('price');
+  const priceMatches = routeState.onlinePrice != null && shelfPrice !== '' && Math.round(routeState.onlinePrice * 100) === Math.round(Number(shelfPrice) * 100);
 
   if (!orderId) {
     return <div className="container mt-4"><div className="alert alert-warning">Open an order and choose an item before reporting an issue.</div><Link className="btn btn-primary" to="/">Go to orders</Link></div>;
@@ -23,7 +26,7 @@ const ReportIssuePage: React.FC = () => {
 
   const submitIssue = () => {
     if (!issueType) return;
-    if (issueType.toLowerCase().includes('price') && routeState.onlinePrice != null) {
+    if (isPriceIssue && routeState.onlinePrice != null) {
       const shelfPriceValue = Number(shelfPrice);
       const matches = Math.round(routeState.onlinePrice * 100) === Math.round(shelfPriceValue * 100);
       recordPriceCheck({
@@ -38,6 +41,7 @@ const ReportIssuePage: React.FC = () => {
         navigate('/order-details', { state: { orderId, priceChecked: true } });
         return;
       }
+      if (!priceImpact) return;
     }
     const issue: IssueRecord = {
       issueId: `ISSUE-${Date.now()}`,
@@ -45,7 +49,7 @@ const ReportIssuePage: React.FC = () => {
       orderItemId: routeState.orderItemId,
       product: routeState.product || 'Item not specified',
       issueType,
-      ...(issueType.toLowerCase().includes('price') ? { onlinePrice: routeState.onlinePrice, shelfPrice: Number(shelfPrice) } : {}),
+      ...(isPriceIssue ? { onlinePrice: routeState.onlinePrice, shelfPrice: Number(shelfPrice), currency: routeState.currency || 'NZD', priceImpact: priceImpact || 'ORDER_CHARGE_AFFECTED' } : {}),
       assignedStaff: '',
       resolutionNotes: '',
       status: 'OPEN',
@@ -91,13 +95,14 @@ const ReportIssuePage: React.FC = () => {
             </div>
           </fieldset>
           {issueType.toLowerCase().includes('price') && <div className="row g-3 mt-2">
-            <div className="col-md-6"><label className="form-label">Online order price</label><div className="form-control-plaintext fw-semibold">{routeState.onlinePrice == null ? 'Not available' : `$${routeState.onlinePrice.toFixed(2)}`}</div></div>
-            <div className="col-md-6"><label className="form-label" htmlFor="shelf-price">Shelf price</label><div className="input-group"><span className="input-group-text">$</span><input id="shelf-price" className="form-control" type="number" min="0" step="0.01" value={shelfPrice} onChange={(event) => setShelfPrice(event.target.value)} placeholder="Enter shelf price" /></div></div>
+            <div className="col-md-6"><label className="form-label">Online order price</label><div className="form-control-plaintext fw-semibold">{routeState.onlinePrice == null ? 'Not available' : `${routeState.currency || 'NZD'} ${routeState.onlinePrice.toFixed(2)}`}</div></div>
+            <div className="col-md-6"><label className="form-label" htmlFor="shelf-price">Shelf price</label><div className="input-group"><span className="input-group-text">{routeState.currency || 'NZD'}</span><input id="shelf-price" className="form-control" type="number" min="0" step="0.01" value={shelfPrice} onChange={(event) => setShelfPrice(event.target.value)} placeholder="Enter shelf price" /></div></div>
           </div>}
+          {isPriceIssue && shelfPrice !== '' && !priceMatches && <fieldset className="mt-3"><legend className="form-label fs-6">What is the price impact?</legend><div className="d-flex flex-column gap-2"><label><input className="form-check-input me-2" type="radio" name="price-impact" checked={priceImpact === 'SHELF_LABEL_ONLY'} onChange={() => setPriceImpact('SHELF_LABEL_ONLY')} />Shelf label only — order charge confirmed correct</label><label><input className="form-check-input me-2" type="radio" name="price-impact" checked={priceImpact === 'ORDER_CHARGE_AFFECTED'} onChange={() => setPriceImpact('ORDER_CHARGE_AFFECTED')} />Order charge affected / not yet confirmed</label></div></fieldset>}
         </div>
         <div className="card-footer d-flex justify-content-between align-items-center">
           <button type="button" className="btn btn-link" onClick={() => navigate(`/order-details?orderId=${encodeURIComponent(orderId)}`)}>Cancel</button>
-          <button type="button" className="btn btn-primary" disabled={!issueType || (issueType.toLowerCase().includes('price') && shelfPrice === '')} onClick={submitIssue}>Submit issue</button>
+          <button type="button" className="btn btn-primary" disabled={!issueType || (isPriceIssue && (shelfPrice === '' || (!priceMatches && !priceImpact)))} onClick={submitIssue}>Submit issue</button>
         </div>
       </div>
     </div>

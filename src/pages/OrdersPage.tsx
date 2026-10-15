@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
-import { loadCompletedOrderIds, loadPickingProgress } from '../utils/workflow';
+import { fulfilmentOutcomeLabel, loadCompletedOrderIds, loadOrderFulfilmentOutcomes, loadPickingProgress } from '../utils/workflow';
 
 interface Order {
   SalesOrderID: string;
@@ -14,6 +14,7 @@ interface Order {
 const OrdersPage: React.FC = () => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [completedOrderIds, setCompletedOrderIds] = useState<string[]>(loadCompletedOrderIds());
+  const [fulfilmentOutcomes, setFulfilmentOutcomes] = useState(loadOrderFulfilmentOutcomes());
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -35,6 +36,7 @@ const OrdersPage: React.FC = () => {
       setOrders(normalized);
       localStorage.setItem('woolworths_orders', JSON.stringify(normalized));
       setCompletedOrderIds(loadCompletedOrderIds());
+      setFulfilmentOutcomes(loadOrderFulfilmentOutcomes());
     } catch (err: any) {
       setError(err.response?.data?.error || err.message || 'Failed to fetch orders');
     } finally {
@@ -85,14 +87,14 @@ const OrdersPage: React.FC = () => {
           const completed = completedOrderIds.includes(order.SalesOrderID);
           const progress = loadPickingProgress()[order.SalesOrderID] || {};
           const started = Object.values(progress).some((status) => status === 'Picked' || status === 'Issue Reported');
-          const orderStatus = completed ? 'Completed' : started ? 'Picking in progress' : 'Not started';
+          const orderStatus = completed ? fulfilmentOutcomeLabel(fulfilmentOutcomes[order.SalesOrderID]) : started ? 'Picking in progress' : 'Not started';
           return (
             <div className="col" key={order.SalesOrderID}>
               <article className="card h-100 shadow-sm">
                 <div className="card-body d-flex flex-column">
                   <div className="d-flex justify-content-between align-items-start gap-2">
                     <h5 className="card-title">Order {order.SalesOrderID}</h5>
-                    <span className={`badge ${completed ? 'bg-success' : started ? 'bg-primary' : 'bg-secondary'}`}>
+                    <span className={`badge ${completed ? (fulfilmentOutcomes[order.SalesOrderID] === 'UNFULFILLED' ? 'bg-secondary' : 'bg-success') : started ? 'bg-primary' : 'bg-secondary'}`}>
                       {orderStatus}
                     </span>
                   </div>
