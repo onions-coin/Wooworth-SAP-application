@@ -3,12 +3,17 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import {
   IssueRecord,
+  isPricingIssue,
   PickingProgress,
   PickingStatus,
   loadCompletedOrderIds,
   loadIssues,
   loadPickingProgress,
+  loadOrderOutcomes,
+  loadOrderPromises,
   markOrderComplete,
+  saveOrderPromise,
+  saveIssues,
   savePickingProgress,
 } from '../utils/workflow';
 
@@ -34,8 +39,9 @@ interface OrderDetails {
 const OrderDetailsPage: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const routeState = (location.state || {}) as { orderId?: string; issueReported?: boolean; priceChecked?: boolean };
   const orderId =
-    (location.state as { orderId?: string } | null)?.orderId ||
+    routeState.orderId ||
     new URLSearchParams(location.search).get('orderId') || '';
   const [order, setOrder] = useState<OrderDetails | null>(null);
   const [loading, setLoading] = useState(true);
@@ -43,6 +49,10 @@ const OrderDetailsPage: React.FC = () => {
   const [pickingProgress, setPickingProgress] = useState<Record<string, PickingStatus>>({});
   const [issues, setIssues] = useState<IssueRecord[]>(loadIssues());
   const [completed, setCompleted] = useState(loadCompletedOrderIds().includes(orderId));
+  const [promisedAt, setPromisedAt] = useState(() => loadOrderPromises()[orderId] || '');
+  const existingOutcome = loadOrderOutcomes().find((outcome) => outcome.orderId === orderId);
+  const [accuracyCheck, setAccuracyCheck] = useState<boolean | null>(existingOutcome?.accurate ?? null);
+  const [perfectCheck, setPerfectCheck] = useState<boolean | null>(existingOutcome?.perfectFulfilment ?? null);
 
   const loadOrder = useCallback(async () => {
     if (!orderId) {
@@ -125,13 +135,23 @@ const OrderDetailsPage: React.FC = () => {
     savePickingProgress(allProgress);
   };
 
+  const verifyIssue = (issueId: string) => {
+    const next = issues.map((issue) => issue.issueId === issueId
+      ? { ...issue, status: 'VERIFIED' as const, verifiedAt: new Date().toISOString() }
+      : issue);
+    setIssues(next);
+    saveIssues(next);
+  };
+
+  const fulfilmentIssues = orderIssues.filter((issue) => !isPricingIssue(issue));
   const canComplete = Boolean(order && !completed && order.Items.length > 0 &&
     order.Items.every((item) => pickingProgress[item.SalesOrderItem] === 'Picked') &&
-    orderIssues.every((issue) => issue.status === 'RESOLVED'));
-  const waitingOnIssue = orderIssues.some((issue) => issue.status !== 'RESOLVED');
+    fulfilmentIssues.every((issue) => issue.status === 'VERIFIED'));
+  const waitingOnIssue = fulfilmentIssues.some((issue) => issue.status !== 'VERIFIED');
 
   const completeOrder = () => {
-    markOrderComplete(orderId);
+    if (accuracyCheck === null || perfectCheck === null) return;
+    markOrderComplete(orderId, { promisedAt: promisedAt || undefined, accurate: accuracyCheck, perfectFulfilment: perfectCheck });
     setCompleted(true);
     navigate('/');
   };
@@ -148,10 +168,12 @@ const OrderDetailsPage: React.FC = () => {
         <div>
           <div className="text-primary fw-semibold">{completed ? 'Complete' : canComplete ? 'Picker · Ready to complete' : waitingOnIssue ? 'Issue handling · Steps 2–3 of 4' : 'Picker · Step 1 of 4'}</div>
           <h2>Order {order.SalesOrderID}</h2>
-          <p className="text-muted mb-0">{completed ? 'This order is complete.' : waitingOnIssue ? 'A reported shelf issue must be assigned and resolved by the Team before picking can continue.' : canComplete ? 'All items are picked and reported issues are resolved. You can complete this order.' : 'Pick each item. Report any shelf issue from its row.'}</p>
+          <p className="text-muted mb-0">{completed ? 'This order is complete.' : waitingOnIssue ? 'The Team must resolve the issue, then staff verify the fix before picking continues.' : canComplete ? 'All items are picked and fulfilment issues are verified. You can complete this order.' : 'Pick each item. Report any shelf issue from its row.'}</p>
         </div>
         <span className={`badge fs-6 ${completed ? 'bg-success' : 'bg-secondary'}`}>{completed ? 'Completed' : 'In progress'}</span>
       </div>
+      {routeState.issueReported && <div className="alert alert-success">Issue reported. It has been added to the Supervisor assignment queue.</div>}
+      {routeState.priceChecked && <div className="alert alert-success">Price check recorded. The online and shelf prices match.</div>}
 
       <section className="card shadow-sm mb-4">
         <div className="card-body row g-3">
@@ -168,14 +190,14 @@ const OrderDetailsPage: React.FC = () => {
           <thead><tr><th>Product</th><th>Code</th><th>Qty</th><th>Amount</th><th>Status</th><th>Next step</th></tr></thead>
           <tbody>{order.Items.map((item) => {
             const status = pickingProgress[item.SalesOrderItem] || 'Not Started';
-            const itemIssue = orderIssues.find((issue) => issue.orderItemId === item.SalesOrderItem && issue.status !== 'RESOLVED');
+            const itemIssue = orderIssues.find((issue) => issue.orderItemId === item.SalesOrderItem && !isPricingIssue(issue) && issue.status !== 'VERIFIED');
             const displayStatus = itemIssue ? `Issue ${itemIssue.status.replace('_', ' ')}` : status === 'Issue Reported' ? 'Ready to pick' : status;
             return <tr key={item.SalesOrderItem}>
               <td>{item.ProductName}</td><td>{item.ProductCode}</td><td>{item.RequestedQuantity}</td><td>{item.NetAmount} {item.Currency}</td>
               <td><span className={`badge ${itemIssue ? 'bg-warning text-dark' : status === 'Picked' ? 'bg-success' : 'bg-secondary'}`}>{displayStatus}</span></td>
               <td><div className="d-flex flex-wrap gap-2">
                 {!completed && !itemIssue && status !== 'Picked' && <button className="btn btn-sm btn-success" onClick={() => updatePicking(item.SalesOrderItem, 'Picked')}>Mark picked</button>}
-                {!completed && <button className="btn btn-sm btn-outline-danger" onClick={() => navigate('/report-issue', { state: { orderId, orderItemId: item.SalesOrderItem, product: `${item.ProductName} (${item.ProductCode})` } })}>Report issue</button>}
+                {!completed && <button className="btn btn-sm btn-outline-danger" onClick={() => navigate('/report-issue', { state: { orderId, orderItemId: item.SalesOrderItem, product: `${item.ProductName} (${item.ProductCode})`, onlinePrice: item.RequestedQuantity ? item.NetAmount / item.RequestedQuantity : item.NetAmount } })}>Report issue</button>}
                 {itemIssue && <Link className="btn btn-sm btn-outline-primary" to="/issue-management">View issue</Link>}
                 {completed && <span className="text-success">Order completed</span>}
               </div></td>
@@ -188,13 +210,20 @@ const OrderDetailsPage: React.FC = () => {
         <div className="card-header"><h5 className="mb-0">Issues for this order</h5></div>
         <ul className="list-group list-group-flush">{orderIssues.map((issue) => <li className="list-group-item d-flex flex-wrap justify-content-between gap-2" key={issue.issueId}>
           <div><strong>{issue.product}</strong><div className="text-muted">{issue.issueType}</div>{issue.resolutionNotes && <div><strong>Handling result:</strong> {issue.resolutionNotes}</div>}</div>
-          <span className={`badge align-self-start ${issue.status === 'RESOLVED' ? 'bg-success' : 'bg-warning text-dark'}`}>{issue.status.replace('_', ' ')}</span>
+          <div className="d-flex flex-column align-items-end gap-2"><span className={`badge ${issue.status === 'VERIFIED' ? 'bg-primary' : issue.status === 'RESOLVED' ? 'bg-success' : 'bg-warning text-dark'}`}>{issue.status.replace('_', ' ')}</span>{issue.onlinePrice != null && <small className="text-muted">Online ${issue.onlinePrice.toFixed(2)} · Shelf ${issue.shelfPrice?.toFixed(2) ?? '—'}</small>}{issue.status === 'RESOLVED' && (!completed || isPricingIssue(issue)) && <button className="btn btn-sm btn-primary" onClick={() => verifyIssue(issue.issueId)}>Verify fix</button>}</div>
         </li>)}</ul>
       </section>}
 
-      {!completed && <div className="card border-primary mb-4"><div className="card-body d-flex flex-wrap justify-content-between align-items-center gap-3">
-        <div><h5 className="mb-1">Complete this order</h5><p className="mb-0 text-muted">All items must be picked and every reported issue resolved.</p></div>
-        <button className="btn btn-primary" disabled={!canComplete} onClick={completeOrder}>Complete order</button>
+      {!completed && <div className="card border-primary mb-4"><div className="card-body">
+        <div className="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
+          <div><h5 className="mb-1">Complete this order</h5><p className="mb-0 text-muted">All items must be picked and fulfilment issues verified. Price issues remain separate.</p></div>
+          <button className="btn btn-primary" disabled={!canComplete || accuracyCheck === null || perfectCheck === null} onClick={completeOrder}>Complete order</button>
+        </div>
+        {canComplete && <div className="row g-3 border-top pt-3">
+          <div className="col-md-4"><label className="form-label" htmlFor="promised-at">Promised fulfilment time <span className="text-muted">(for on-time KPI)</span></label><input id="promised-at" className="form-control" type="datetime-local" value={promisedAt} onChange={(event) => { setPromisedAt(event.target.value); saveOrderPromise(orderId, event.target.value); }} /></div>
+          <div className="col-md-4"><label className="form-label">Were the product and quantities accurate?</label><div className="btn-group w-100" role="group"><button type="button" className={`btn ${accuracyCheck === true ? 'btn-success' : 'btn-outline-success'}`} onClick={() => setAccuracyCheck(true)}>Yes</button><button type="button" className={`btn ${accuracyCheck === false ? 'btn-danger' : 'btn-outline-danger'}`} onClick={() => setAccuracyCheck(false)}>No</button></div></div>
+          <div className="col-md-4"><label className="form-label">Did it meet the A2 perfect fulfilment standard?</label><div className="btn-group w-100" role="group"><button type="button" className={`btn ${perfectCheck === true ? 'btn-success' : 'btn-outline-success'}`} onClick={() => setPerfectCheck(true)}>Yes</button><button type="button" className={`btn ${perfectCheck === false ? 'btn-danger' : 'btn-outline-danger'}`} onClick={() => setPerfectCheck(false)}>No</button></div></div>
+        </div>}
       </div></div>}
     </div>
   );

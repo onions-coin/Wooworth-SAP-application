@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { IssueRecord, loadIssues, loadPickingProgress, saveIssues, savePickingProgress } from '../utils/workflow';
+import { IssueRecord, loadIssues, loadPickingProgress, recordPriceCheck, saveIssues, savePickingProgress } from '../utils/workflow';
 
 const IssueTypes = [
   'Online vs shelf price mismatch',
@@ -12,9 +12,10 @@ const IssueTypes = [
 const ReportIssuePage: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const routeState = (location.state || {}) as { orderId?: string; orderItemId?: string; product?: string };
+  const routeState = (location.state || {}) as { orderId?: string; orderItemId?: string; product?: string; onlinePrice?: number };
   const orderId = routeState.orderId || new URLSearchParams(location.search).get('orderId') || '';
   const [issueType, setIssueType] = useState('');
+  const [shelfPrice, setShelfPrice] = useState('');
 
   if (!orderId) {
     return <div className="container mt-4"><div className="alert alert-warning">Open an order and choose an item before reporting an issue.</div><Link className="btn btn-primary" to="/">Go to orders</Link></div>;
@@ -22,12 +23,29 @@ const ReportIssuePage: React.FC = () => {
 
   const submitIssue = () => {
     if (!issueType) return;
+    if (issueType.toLowerCase().includes('price') && routeState.onlinePrice != null) {
+      const shelfPriceValue = Number(shelfPrice);
+      const matches = Math.round(routeState.onlinePrice * 100) === Math.round(shelfPriceValue * 100);
+      recordPriceCheck({
+        orderId,
+        product: routeState.product || 'Item not specified',
+        onlinePrice: routeState.onlinePrice,
+        shelfPrice: shelfPriceValue,
+        matches,
+        checkedAt: new Date().toISOString(),
+      });
+      if (matches) {
+        navigate('/order-details', { state: { orderId, priceChecked: true } });
+        return;
+      }
+    }
     const issue: IssueRecord = {
       issueId: `ISSUE-${Date.now()}`,
       orderId,
       orderItemId: routeState.orderItemId,
       product: routeState.product || 'Item not specified',
       issueType,
+      ...(issueType.toLowerCase().includes('price') ? { onlinePrice: routeState.onlinePrice, shelfPrice: Number(shelfPrice) } : {}),
       assignedStaff: '',
       resolutionNotes: '',
       status: 'OPEN',
@@ -35,12 +53,12 @@ const ReportIssuePage: React.FC = () => {
     };
     saveIssues([...loadIssues(), issue]);
 
-    if (issue.orderItemId) {
+    if (issue.orderItemId && !issueType.toLowerCase().includes('price')) {
       const progress = loadPickingProgress();
       progress[orderId] = { ...(progress[orderId] || {}), [issue.orderItemId]: 'Issue Reported' };
       savePickingProgress(progress);
     }
-    navigate('/issue-management', { state: { newIssueId: issue.issueId } });
+    navigate('/order-details', { state: { orderId, issueReported: true } });
   };
 
   return (
@@ -53,8 +71,8 @@ const ReportIssuePage: React.FC = () => {
         </ol>
       </nav>
 
-      <div className="text-primary fw-semibold">Picker · Step 2 of 4</div><h2>Report a product / shelf issue</h2>
-      <p className="text-muted">Report a shelf issue. The order and item are already attached.</p>
+      <div className="text-primary fw-semibold">Staff · Step 1 of 4</div><h2>Report a store issue</h2>
+      <p className="text-muted">Choose a shelf gap, price check, or product quality issue. If the online and shelf prices match, the check is recorded without creating an issue.</p>
       <div className="card shadow-sm">
         <div className="card-body">
           <div className="row g-3 mb-4">
@@ -72,10 +90,14 @@ const ReportIssuePage: React.FC = () => {
               ))}
             </div>
           </fieldset>
+          {issueType.toLowerCase().includes('price') && <div className="row g-3 mt-2">
+            <div className="col-md-6"><label className="form-label">Online order price</label><div className="form-control-plaintext fw-semibold">{routeState.onlinePrice == null ? 'Not available' : `$${routeState.onlinePrice.toFixed(2)}`}</div></div>
+            <div className="col-md-6"><label className="form-label" htmlFor="shelf-price">Shelf price</label><div className="input-group"><span className="input-group-text">$</span><input id="shelf-price" className="form-control" type="number" min="0" step="0.01" value={shelfPrice} onChange={(event) => setShelfPrice(event.target.value)} placeholder="Enter shelf price" /></div></div>
+          </div>}
         </div>
         <div className="card-footer d-flex justify-content-between align-items-center">
           <button type="button" className="btn btn-link" onClick={() => navigate(`/order-details?orderId=${encodeURIComponent(orderId)}`)}>Cancel</button>
-          <button type="button" className="btn btn-primary" disabled={!issueType} onClick={submitIssue}>Submit issue</button>
+          <button type="button" className="btn btn-primary" disabled={!issueType || (issueType.toLowerCase().includes('price') && shelfPrice === '')} onClick={submitIssue}>Submit issue</button>
         </div>
       </div>
     </div>

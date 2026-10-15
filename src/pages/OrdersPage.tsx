@@ -56,7 +56,7 @@ const OrdersPage: React.FC = () => {
       <div className="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
         <div>
           <h2 className="mb-1">Orders</h2>
-          <p className="text-muted mb-0">Picker · Step 1 of 4: open an order and pick its items. Report any shelf issue from the item row.</p>
+          <p className="text-muted mb-0">Staff · Step 1 of 4: open an order, pick items, and report shelf or price issues when needed.</p>
         </div>
         <div className="d-flex gap-2">
           <input
