@@ -1,6 +1,5 @@
 <!doctype html>
 <html lang="en-NZ">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -10,33 +9,347 @@
     <title>Orders · Woolworths Order Assistant</title>
     <link rel="icon"
         href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' rx='10' fill='%23178841'/%3E%3Ctext x='8' y='29' font-size='28' fill='white'%3EW%3C/text%3E%3C/svg%3E">
-    <link rel="stylesheet" href="style.css">
-    <script src="workflow.js" defer></script>
-    <script src="app.js" defer></script>
-</head>
+    <style>
+:root { --green: #178841; --green-dark: #106931; --green-soft: #eaf5ed; --ink: #1d3428; --muted: #66746c; --line: #e1e8e3; --background: #f7f9f8; --amber: #996000; --shadow: 0 3px 14px #16382405; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: var(--ink); background: var(--background); font-size: 15px; }
+* { box-sizing: border-box; }
+body { margin: 0; min-height: 100vh; display: flex; flex-direction: column; }
+a { color: var(--green-dark); text-decoration: none; }
+a:hover { text-decoration: underline; }
+button, input, select, textarea { font: inherit; }
+button, select { cursor: pointer; }
+button { transition: background .15s, border-color .15s; }
+button:disabled { cursor: not-allowed; opacity: .5; }
+:focus-visible { outline: 3px solid #61ad7b; outline-offset: 3px; }
+[hidden] { display: none !important; }
+h1, h2, h3, p { margin: 0; }
+h1 { font-size: clamp(28px, 3vw, 34px); letter-spacing: -1px; font-weight: 720; line-height: 1.2; margin: 7px 0 10px; }
+h2 { font-size: 20px; letter-spacing: -.4px; font-weight: 650; }
+h3 { font-size: 15px; font-weight: 620; }
+p { line-height: 1.6; }
+input, select, textarea { border: 1px solid #d3ded6; border-radius: 8px; padding: 10px 12px; background: white; color: var(--ink); min-height: 42px; max-width: 100%; }
+input::placeholder, textarea::placeholder { color: #78847d; }
+input[readonly] { background: var(--background); color: var(--muted); }
+textarea { resize: vertical; }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+.skip-link { position: fixed; top: -60px; z-index: 20; padding: 12px; background: white; }
+.skip-link:focus { top: 5px; }
+.site-header { background: white; border-bottom: 1px solid var(--line); }
+.nav-inner { max-width: 1240px; margin: auto; padding: 17px 30px; display: flex; align-items: center; gap: 48px; }
+.brand { display: flex; align-items: center; gap: 10px; font-size: 18px; font-weight: 750; color: var(--ink); line-height: 1.1; flex-shrink: 0; }
+.brand:hover { text-decoration: none; }
+.brand-icon { width: 42px; height: 44px; object-fit: contain; display: block; flex: 0 0 auto; }
+.brand-subtitle { display: block; font-size: 11px; font-weight: 500; color: var(--muted); margin-top: 5px; letter-spacing: .35px; }
+nav { display: flex; align-items: center; gap: 5px; flex: 1; }
+nav a { color: var(--muted); padding: 11px 17px; font-weight: 550; font-size: 14px; border-radius: 8px; white-space: nowrap; }
+nav a:hover { background: var(--background); text-decoration: none; }
+nav a[aria-current] { color: var(--green-dark); background: var(--green-soft); }
+.nav-count { display: inline-block; min-width: 18px; border-radius: 5px; padding: 1px 4px; background: var(--green); color: white; text-align: center; font-size: 11px; margin-left: 3px; }
+.role-control { display: flex; align-items: center; gap: 9px; }
+.role-label { font-size: 12px; color: var(--muted); white-space: nowrap; }
+.role-control select { font-size: 13px; min-height: 38px; padding: 8px 10px; font-weight: 600; }
+main { max-width: 1240px; width: 100%; margin: 0 auto; padding: 37px 30px 48px; flex: 1; }
+.page-heading { display: flex; align-items: center; justify-content: space-between; gap: 24px; margin-bottom: 26px; }
+.page-heading > div > p:last-child { color: var(--muted); max-width: 670px; font-size: 14px; }
+.eyebrow { font-size: 10px; color: var(--green-dark); font-weight: 750; letter-spacing: 1.6px; line-height: 1.5; }
+.button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 42px; border: 1px solid var(--green); border-radius: 8px; padding: 10px 17px; color: white; background: var(--green); font-size: 13px; font-weight: 650; white-space: nowrap; text-decoration: none; }
+.button:hover:not(:disabled) { background: var(--green-dark); border-color: var(--green-dark); text-decoration: none; }
+.button.secondary { background: white; color: var(--ink); border-color: #d6e1d9; }
+.button.secondary:hover:not(:disabled) { background: var(--green-soft); border-color: #b4cdbb; }
+.button.small { min-height: 36px; padding: 8px 12px; font-size: 12px; }
+.button.full { width: 100%; justify-content: space-between; }
+.button.danger { background: #ab3535; border-color: #ab3535; }
+.button.danger:hover { background: #852828; border-color: #852828; }
+.text-button { background: none; border: 0; padding: 7px 0; color: var(--muted); font-size: 12px; }
+.text-button:hover { color: var(--ink); text-decoration: underline; }
+.data-message { margin-bottom: 26px; border: 1px solid var(--line); border-radius: 9px; padding: 12px 15px; font-size: 12px; line-height: 1.6; }
+.data-message.connected { color: #26633b; background: #eff8f1; border-color: #d9ebde; }
+.data-message.connected::before { content: '●'; font-size: 10px; color: var(--green); margin-right: 8px; }
+.data-message.loading { color: var(--muted); background: white; }
+.data-message.loading::before { content: ''; display: inline-block; border: 2px solid #cde1d2; border-top-color: var(--green); width: 11px; height: 11px; border-radius: 50%; margin-right: 10px; vertical-align: -2px; animation: spin .8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.data-message.error, .form-error { color: #a33232; background: #fff0f0; border-color: #f0cccc; }
+.data-message.warning { color: #885a05; background: #fff7e6; border-color: #efdeb8; }
+.subtle { color: var(--muted); font-size: 12px; }
+.section-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 15px; margin-bottom: 18px; }
+.filters { display: flex; gap: 10px; }
+.filters input { width: 225px; font-size: 12px; }
+.filters select { font-size: 12px; }
+.orders-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; }
+.order-card, .issue-card, .kpi-card, .panel, .details-panel { background: white; border: 1px solid var(--line); border-radius: 13px; box-shadow: var(--shadow); min-width: 0; }
+.order-card { padding: 21px; }
+.order-card.selected { border-color: var(--green); box-shadow: 0 0 0 1px var(--green); }
+.card-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.order-card h2 { font-size: 24px; margin: 17px 0 15px; overflow-wrap: anywhere; }
+.card-summary { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); }
+progress { display: block; width: 100%; height: 5px; border: 0; border-radius: 9px; appearance: none; overflow: hidden; margin: 12px 0 20px; background: #edf1ee; }
+progress::-webkit-progress-bar { background: #edf1ee; border-radius: 9px; }
+progress::-webkit-progress-value { background: var(--green); border-radius: 9px; }
+progress::-moz-progress-bar { background: var(--green); }
+.badge { display: inline-flex; align-items: center; gap: 5px; border-radius: 6px; padding: 5px 8px; font-size: 10px; line-height: 1.3; font-weight: 650; white-space: nowrap; }
+.status-dot { width: 5px; height: 5px; background: currentColor; border-radius: 50%; }
+.open { background: #fff4df; color: #8b5900; }
+.progress { background: #edf2ff; color: #3c5ba2; }
+.resolved { background: #f2edfa; color: #7751a2; }
+.closed { background: var(--green-soft); color: #176e36; }
+.neutral { background: #eff2f0; color: #66746c; }
+.details-panel { margin-top: 28px; scroll-margin-top: 22px; overflow: hidden; }
+.details-header { padding: 24px; display: flex; justify-content: space-between; align-items: center; gap: 12px; border-bottom: 1px solid var(--line); }
+.details-header h2 { margin: 4px 0 7px; overflow-wrap: anywhere; }
+.details-header-actions { display: flex; align-items: center; gap: 18px; }
+.product-row { padding: 20px 24px; display: flex; align-items: center; gap: 14px; border-bottom: 1px solid #edf1ee; }
+.product-icon { background: var(--background); color: #7e9786; width: 40px; height: 44px; display: grid; place-items: center; border-radius: 9px; font-size: 23px; flex-shrink: 0; }
+.product-info { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.product-info h3 { margin-bottom: 5px; }
+.product-info p { color: var(--muted); font-size: 11px; }
+.divider { margin: 0 5px; color: #a6b2aa; }
+.product-actions { display: flex; gap: 8px; }
+.product-actions:empty { display: none; }
+.issue-link { display: inline-block; margin-top: 8px; font-size: 11px; color: #855c17; }
+.details-footer { padding: 18px 24px; background: #fcfdfc; display: flex; align-items: center; justify-content: space-between; gap: 15px; }
+.empty-state { grid-column: 1/-1; padding: 54px 20px; border: 1px dashed #ccd9d0; border-radius: 12px; text-align: center; background: #ffffff80; }
+.empty-state h2 { font-size: 18px; margin: 12px 0 8px; }
+.empty-state p { color: var(--muted); font-size: 13px; margin-bottom: 18px; }
+.empty-icon { width: 44px; height: 44px; display: inline-grid; place-items: center; background: var(--green-soft); color: var(--green); font-size: 22px; border-radius: 12px; }
+.workflow-strip { display: flex; align-items: center; justify-content: space-between; padding: 20px 24px; background: white; border: 1px solid var(--line); border-radius: 12px; margin-bottom: 25px; gap: 12px; }
+.workflow-strip > div { display: flex; align-items: center; gap: 9px; font-size: 12px; white-space: nowrap; }
+.workflow-strip strong { color: var(--muted); margin-left: 7px; font-size: 14px; }
+.step-dot { width: 25px; height: 25px; display: grid; place-items: center; border-radius: 7px; font-size: 10px; font-weight: 700; }
+.step-arrow { color: #b0bdb4; }
+.issues-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+.issue-card { padding: 22px; overflow-wrap: anywhere; }
+.type-label { font-weight: 650; font-size: 12px; color: var(--green-dark); }
+.issue-id { font-family: ui-monospace, monospace; color: var(--muted); font-size: 10px; margin: 13px 0 8px; }
+.issue-card h2 { font-size: 21px; margin-bottom: 16px; }
+.issue-meta { display: flex; flex-wrap: wrap; gap: 14px 24px; color: var(--muted); font-size: 11px; }
+.issue-meta strong { display: block; color: var(--ink); font-size: 12px; margin-top: 5px; }
+.issue-description { font-size: 13px; margin-top: 18px; white-space: pre-wrap; background: var(--background); padding: 12px; border-radius: 8px; }
+.issue-actions { padding: 18px 0; display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.action-hint { color: var(--muted); font-size: 12px; flex: 1; min-width: 150px; }
+.assignment-form { display: flex; align-items: center; gap: 8px; width: 100%; flex-wrap: wrap; }
+.assignment-form label { font-size: 12px; }
+.assignment-form select { flex: 1; font-size: 12px; min-width: 130px; min-height: 36px; padding: 8px; }
+.issue-footer { border-top: 1px solid var(--line); padding-top: 15px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; font-size: 10px; color: var(--muted); }
+.issue-footer a { font-size: 12px; font-weight: 600; }
+.kpi-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 19px; margin-bottom: 24px; }
+.kpi-card { padding: 22px 24px; }
+.kpi-icon { width: 33px; height: 33px; display: grid; place-items: center; color: var(--green); background: var(--green-soft); border-radius: 9px; font-size: 20px; font-weight: 600; }
+.kpi-icon.amber { color: var(--amber); background: #fff4df; }
+.source-tag { font-size: 9px; letter-spacing: 1px; font-weight: 700; color: var(--green-dark); background: var(--green-soft); padding: 5px 7px; border-radius: 5px; }
+.source-tag.local { background: #f0f2f1; color: var(--muted); }
+.kpi-card h2 { font-size: 13px; font-weight: 550; color: var(--muted); letter-spacing: 0; margin-top: 19px; }
+.kpi-value { font-size: 44px; font-weight: 730; letter-spacing: -1.5px; line-height: 1.3; margin: 6px 0 8px; font-variant-numeric: tabular-nums; }
+.kpi-card .subtle { font-size: 11px; }
+.dashboard-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+.panel { padding: 24px; }
+.panel-heading { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 22px; }
+.panel-heading h2 { margin-top: 5px; font-size: 18px; }
+.inline-link { font-size: 12px; font-weight: 650; white-space: nowrap; }
+.overview-row { display: flex; align-items: center; justify-content: space-between; padding: 13px 0; border-top: 1px solid #edf1ee; font-size: 16px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.connection-icon { width: 34px; height: 34px; background: var(--background); border-radius: 9px; display: grid; place-items: center; color: var(--muted); }
+.connection-details { margin: 0; }
+.connection-details > div { display: flex; justify-content: space-between; gap: 20px; align-items: center; padding: 13px 0; border-top: 1px solid #edf1ee; font-size: 12px; }
+.connection-details dt { color: var(--muted); }
+.connection-details dd { margin: 0; text-align: right; font-size: 11px; }
+.source-note { padding: 14px; background: var(--background); border-radius: 9px; margin-top: 17px; font-size: 12px; }
+.source-note strong { font-size: 12px; font-weight: 600; }
+.source-note p { color: var(--muted); font-size: 11px; margin-top: 6px; }
+.site-footer { width: calc(100% - 60px); max-width: 1180px; margin: 0 auto; padding: 18px 0; border-top: 1px solid var(--line); display: flex; justify-content: space-between; align-items: center; gap: 12px; font-size: 10px; color: var(--muted); }
+.site-footer > div { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
+.footer-dot { display: inline-block; width: 5px; height: 5px; background: var(--green); border-radius: 50%; }
+.footer-role { padding-left: 16px; }
+.notification { position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%); width: max-content; max-width: calc(100% - 32px); padding: 15px 20px; border-radius: 10px; box-shadow: 0 5px 25px #102d2826; color: white; font-size: 13px; line-height: 1.5; z-index: 5; background: var(--green-dark); }
+.notification.error { background: #9a3030; }
+dialog { width: min(490px, calc(100% - 32px)); max-height: calc(100vh - 48px); padding: 0; border: 1px solid var(--line); border-radius: 16px; color: var(--ink); box-shadow: 0 15px 80px #102d282b; }
+dialog::backdrop { background: #112b2266; backdrop-filter: blur(3px); }
+.dialog-body { padding: 28px; }
+.dialog-body h2 { font-size: 24px; margin: 6px 0 10px; }
+.dialog-body > p { margin-bottom: 18px; font-size: 12px; color: var(--muted); }
+.dialog-body label { display: block; font-size: 12px; font-weight: 600; margin: 16px 0 7px; }
+.dialog-body input, .dialog-body select, .dialog-body textarea { display: block; width: 100%; font-size: 13px; }
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.form-grid label input { margin-top: 7px; }
+.form-grid label { margin-top: 0; }
+.dialog-actions { margin-top: 24px; display: flex; justify-content: flex-end; gap: 10px; }
+.dialog-body .form-error { font-size: 12px; color: #a33232; border: 1px solid #f0cccc; border-radius: 8px; padding: 10px; margin: 12px 0 0; }
+.back-link { display: inline-block; margin-bottom: 22px; font-size: 13px; font-weight: 600; }
+body[data-page="details"] .details-panel { margin-top: 0; }
+.workflow-strip .flow-step { display: flex; align-items: center; gap: 9px; font-size: 12px; white-space: nowrap; background: none; border: 1px solid transparent; border-radius: 8px; color: var(--ink); padding: 7px; }
+.workflow-strip .flow-step:hover, .workflow-strip .flow-step[aria-pressed="true"] { background: var(--green-soft); border-color: #b4cdbb; }
+.issue-card.highlighted { border-color: var(--green); box-shadow: 0 0 0 1px var(--green); scroll-margin-top: 20px; }
+.next-step { margin-top: 15px; font-size: 12px; color: var(--green-dark); line-height: 1.7; }
+.resolution-form { width: 100%; display: flex; flex-direction: column; gap: 9px; }
+.resolution-form label { font-size: 12px; font-weight: 600; margin-top: 5px; }
+.resolution-form textarea { width: 100%; font-size: 13px; }
+.resolution-form .button { align-self: flex-start; }
+.resolution-result { margin-top: 14px; padding: 12px; background: var(--green-soft); border-radius: 8px; font-size: 12px; }
+.resolution-result p { white-space: pre-wrap; margin-top: 5px; }
+.verified-hint { margin-top: 8px; color: var(--green-dark) !important; font-size: 12px !important; }
+#description-help { margin-top: 7px; }
+@media (max-width: 1020px) { .nav-inner { gap: 20px; } .product-row { flex-wrap: wrap; } .product-info { flex-basis: calc(100% - 60px); } .product-status { margin-left: 54px; } .product-actions { margin-left: auto; } .workflow-strip { padding: 18px; gap: 8px; } .workflow-strip > div { gap: 6px; } }
+@media (max-width: 760px) { .nav-inner { flex-wrap: wrap; padding: 16px 20px 10px; gap: 16px; } .brand { flex: 1; } .role-control { margin-left: auto; } nav { order: 3; width: 100%; flex-basis: 100%; } nav a { flex: 1; text-align: center; padding: 11px; } main { padding: 27px 20px 36px; } .page-heading { align-items: flex-start; flex-wrap: wrap; gap: 15px; } .page-heading > .button { min-height: 38px; font-size: 12px; } .orders-grid { grid-template-columns: repeat(2, minmax(0,1fr)); } .kpi-grid { gap: 12px; } .kpi-card { padding: 18px; } .kpi-value { font-size: 35px; } .dashboard-grid { grid-template-columns: 1fr; gap: 18px; } .issues-grid { grid-template-columns: 1fr; } .workflow-strip { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; } .workflow-strip strong { margin-left: auto; } .step-arrow { display: none; } .site-footer { width: calc(100% - 40px); } .section-toolbar { align-items: flex-start; flex-wrap: wrap; } .filters { flex: 1; justify-content: flex-end; } .filters input { width: 190px; } }
+@media (max-width: 480px) { .brand { font-size: 16px; } .brand-icon { width: 35px; height: 39px; } .brand-subtitle { font-size: 10px; } .role-control { gap: 4px; } .role-label { display: none; } .role-control select { max-width: 113px; font-size: 12px; } .orders-grid, .kpi-grid { grid-template-columns: 1fr; } .kpi-card { padding: 20px; } .kpi-card h2 { margin-top: 12px; } .kpi-value { font-size: 40px; } .section-toolbar { gap: 12px; } .filters { width: 100%; flex-basis: 100%; } .filters input { width: 100%; min-width: 0; } .filters select { flex-shrink: 0; max-width: 145px; } .details-header, .product-row { padding: 18px; } .details-header { align-items: flex-start; } .details-header-actions { flex-direction: column; align-items: flex-end; gap: 8px; } .details-footer { padding: 18px; flex-direction: column; align-items: stretch; } .product-status { margin-left: 0; } .product-actions { margin-left: 0; width: 100%; } .product-actions .button { flex: 1; } .footer-role { padding-left: 0; width: 100%; } .site-footer { align-items: flex-start; } .dialog-body { padding: 23px; } .panel { padding: 20px; } .assignment-form label { width: 100%; } }
+@media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; transition: none !important; animation: none !important; } }
 
-<body data-page="orders"><a class="skip-link" href="#main">Skip to content</a>
-    <header class="site-header">
-        <div class="nav-inner"><a class="brand" href="index.html"><img class="brand-icon" src="https://www.woolworths.co.nz/assets/images/express/logo-wapple-green.svg" alt="Woolworths"/><span>Woolworths<span class="brand-subtitle">Order Assistant</span></span></a>
-            <nav aria-label="Main navigation"><a href="index.html" aria-current="page">Orders</a><a
-                    href="issues.html"><span id="issues-nav-label">Issues</span> <span id="issue-count"
-                        class="nav-count" hidden>0</span></a><a href="dashboard.html">Dashboard</a></nav>
+/* Independent order handling and correction records share the existing card style. */
+.manual-scope { background: #edf4ef; color: #405b49; padding: 12px 15px; border: 1px solid #dce7df; border-radius: 9px; font-size: 12px; margin-bottom: 23px; }
+.issue-toolbar { flex-wrap: wrap; }
+.issue-toolbar .filters { flex-wrap: wrap; }
+.issue-toolbar .filters select { max-width: 260px; }
+.issues-grid { grid-template-columns: 1fr; }
+.dual-issue h2 { margin-top: 9px; }
+.dual-lanes { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-top: 20px; }
+.handling-lane { border: 1px solid var(--line); border-radius: 10px; padding: 19px; min-width: 0; background: #fcfdfc; }
+.correction-lane { background: #fafbfc; }
+.lane-heading { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 9px; margin-bottom: 10px; }
+.lane-heading h3 { font-size: 14px; }
+.lane-team { color: var(--green-dark); font-size: 12px; font-weight: 650; }
+.lane-task { font-size: 12px; white-space: pre-wrap; margin-top: 9px; }
+.lane-time { color: var(--muted); font-size: 10px; margin-top: 16px; }
+.lane-actions { margin-top: 16px; display: flex; flex-direction: column; gap: 12px; }
+.lane-actions .button { align-self: flex-start; white-space: normal; text-align: left; }
+.handling-lane form { display: flex; flex-direction: column; gap: 12px; margin-top: 12px; }
+.handling-lane label, .legacy-panel label { display: flex; flex-direction: column; gap: 6px; font-size: 12px; font-weight: 600; }
+.handling-lane input, .handling-lane select, .handling-lane textarea { font-size: 13px; width: 100%; min-width: 0; }
+.handling-lane .check-label { flex-direction: row; align-items: flex-start; gap: 8px; font-size: 12px; line-height: 1.6; font-weight: 450; }
+.check-label input[type="checkbox"] { width: 16px; min-width: 16px; min-height: 16px; height: 16px; padding: 0; margin: 2px 0 0; flex-shrink: 0; accent-color: var(--green); }
+.handling-lane .form-grid label { margin: 0; }
+.handling-lane summary, .event-history summary, .legacy-panel summary { cursor: pointer; font-size: 12px; font-weight: 600; color: var(--green-dark); line-height: 1.7; }
+.assignment-editor { border-bottom: 1px solid var(--line); padding-bottom: 13px; }
+.local-decision { border-left: 3px solid #5a9d70; background: #edf6ef; padding: 11px 13px; margin-top: 12px; border-radius: 0 8px 8px 0; font-size: 12px; }
+.local-decision p { white-space: pre-wrap; margin: 5px 0; color: var(--ink); font-size: 12px; }
+.local-decision strong { font-size: 12px; }
+.local-decision .subtle { font-size: 10px; }
+.return-reason { background: #fff4e3; color: #835700; border-radius: 7px; padding: 10px; font-size: 12px; margin-top: 12px; }
+.legacy-notice, .legacy-panel { background: #fff8e9; border: 1px solid #ecdcb5; border-radius: 8px; padding: 12px; margin-top: 13px; font-size: 12px; color: #7f6025; }
+.legacy-panel p { font-size: 12px; margin-top: 8px; }
+.legacy-panel form { display: flex; flex-direction: column; gap: 10px; margin-top: 12px; }
+.legacy-panel .button { align-self: flex-start; }
+.legacy-panel input, .legacy-panel select { font-size: 12px; }
+.event-history { padding: 16px 0; }
+.event-history ol { margin: 12px 0 0; padding-left: 19px; max-height: 320px; overflow-y: auto; }
+.event-history li { font-size: 12px; margin-bottom: 13px; }
+.event-history li p { white-space: pre-wrap; color: var(--muted); margin: 4px 0; }
+.event-history li span { color: var(--muted); font-size: 10px; }
+.observed-prices { margin-top: 12px; font-size: 12px; color: var(--muted); }
+.sap-source { margin-top: 9px; font-size: 11px; }
+.sap-source summary { cursor: pointer; color: var(--muted); }
+.sap-source dl { background: var(--background); padding: 10px; border-radius: 7px; margin: 8px 0; }
+.sap-source dl > div { display: flex; flex-wrap: wrap; gap: 5px 15px; margin: 4px 0; }
+.sap-source dt { font-weight: 550; }
+.sap-source dd { margin: 0; color: var(--muted); }
+.notification a { color: white; font-weight: 700; text-decoration: underline; margin-left: 7px; }
+.form-error { padding: 10px; border: 1px solid #f0cccc; border-radius: 7px; font-size: 12px; }
+.card-note { margin: 12px 0 20px; }
+.table-scroll { overflow-x: auto; }
+.data-table { width: 100%; border-collapse: collapse; text-align: left; font-size: 12px; }
+.data-table th, .data-table td { padding: 13px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+.data-table thead th { color: var(--muted); font-weight: 550; white-space: nowrap; }
+.data-table tbody th { font-weight: 550; }
+.data-table td { line-height: 1.6; }
+.table-note { margin: -5px 0 14px; }
+.dashboard-followup { grid-template-columns: 1.6fr 1fr; margin-top: 24px; }
+#monthly-limitations { margin-top: 15px; }
+@media (max-width: 760px) { .dual-lanes, .dashboard-followup { grid-template-columns: 1fr; } .handling-lane { padding: 15px; } .issue-toolbar .filters { justify-content: flex-start; width: 100%; } .issue-toolbar .filters select { width: 100%; max-width: none; } .issue-toolbar .filters input { width: 100%; } .data-table { min-width: 500px; } }
+
+.active-team-control select { max-width: 170px; font-size: 12px; min-height: 38px; }
+.nav-inner { gap: 24px; flex-wrap: wrap; }
+.issue-work { margin-top: 18px; }
+.primary-task { max-width: 760px; }
+.primary-task .lane-actions:empty { display: none; }
+.simple-issue { padding: 22px 24px; }
+.simple-issue .issue-id { margin-top: 9px; margin-bottom: 6px; }
+.simple-issue h2 { margin-bottom: 12px; }
+.followup-panel { margin-top: 15px; border: 1px solid var(--line); padding: 14px 17px; border-radius: 9px; max-width: 760px; background: #fafbfc; }
+.followup-panel summary, .report-context summary, .dashboard-extra > summary { cursor: pointer; font-size: 13px; color: var(--green-dark); font-weight: 600; }
+.followup-panel > p { margin-top: 10px; font-size: 12px; }
+.followup-panel form { display: flex; flex-direction: column; gap: 10px; margin-top: 13px; }
+.followup-panel label { display: flex; flex-direction: column; gap: 7px; font-size: 12px; }
+.followup-panel textarea { width: 100%; font-size: 13px; }
+.followup-panel .check-label { flex-direction: row; align-items: flex-start; }
+.followup-panel .button { align-self: flex-start; }
+.it-handoff { margin-top: 16px; }
+.it-handoff summary { font-size: 12px; }
+.customer-handoff { padding-top: 8px; border-top: 1px solid var(--line); display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.handoff-status { font-size: 12px; color: var(--muted); margin: 12px 0; }
+.auto-route-note { background: var(--green-soft); color: var(--green-dark) !important; padding: 11px; border-radius: 8px; margin: 13px 0 !important; }
+.report-context { margin: 15px 0; padding: 11px; background: var(--background); border-radius: 8px; }
+.report-context summary { font-size: 12px; color: var(--muted); }
+.dashboard-extra { margin-bottom: 22px; }
+.dashboard-extra > summary { padding: 12px 0; }
+.dashboard-extra > .kpi-grid { margin-top: 13px; }
+.dashboard-followup { grid-template-columns: 1fr 1fr; }
+@media (max-width: 760px) { .dashboard-followup { grid-template-columns: 1fr; } .active-team-control { order: 4; width: 100%; } .active-team-control select { width: 100%; max-width: none; } .simple-issue { padding: 18px; } .primary-task { padding: 15px; } }
+
+.simple-treatment { max-width: 720px; margin-top: 18px; }
+.treatment-form { display: flex; flex-direction: column; gap: 13px; }
+.treatment-form label, .followup-form label { display: flex; flex-direction: column; gap: 7px; font-size: 12px; font-weight: 550; }
+.treatment-form input, .treatment-form select, .treatment-form textarea { width: 100%; font-size: 13px; }
+.treatment-form .stock-treatment { display: flex; flex-direction: column; gap: 12px; }
+.treatment-form .check-label { flex-direction: row; align-items: flex-start; line-height: 1.6; }
+.treatment-form .button { align-self: flex-start; }
+.followup-editor { padding: 12px; background: var(--background); border-radius: 8px; }
+.followup-editor summary { cursor: pointer; color: var(--muted); font-size: 12px; }
+.followup-editor label { margin-top: 12px; }
+.followup-editor .subtle { margin-top: 9px; }
+.followup-summary { margin-top: 15px; }
+.simple-treatment > .action-hint { margin-bottom: 12px; }
+.issue-context { font-size: 12px; color: var(--muted); margin-top: 9px; }
+.simple-issue > h2 { margin-top: 14px; }
+.simple-issue > .issue-footer { margin-top: 18px; }
+.supervisor-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+@media (max-width: 480px) { .supervisor-kpis { grid-template-columns: 1fr; } }
+
+/* Receipt-style picking list, retaining the existing per-item actions. */
+.receipt-head, .product-row.receipt-row { display: grid; grid-template-columns: minmax(180px, 2fr) minmax(85px, .65fr) minmax(105px, .85fr) minmax(105px, .85fr) minmax(160px, 1.2fr); gap: 20px; align-items: start; }
+.receipt-head { padding: 15px 24px; background: #f6f9f7; border-bottom: 1px solid var(--line); color: var(--muted); font-size: 11px; font-weight: 600; }
+.product-row.receipt-row { padding: 22px 24px; }
+.receipt-row .product-info { min-width: 0; }
+.receipt-row .product-info h3 { overflow-wrap: anywhere; }
+.receipt-number { font-size: 14px; font-variant-numeric: tabular-nums; padding-top: 3px; }
+.receipt-actions { display: flex; flex-direction: column; gap: 12px; }
+.receipt-actions .product-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.receipt-mobile-label { display: none; }
+.receipt-total { display: flex; justify-content: space-between; gap: 20px; padding: 22px 24px 10px; font-size: 17px; }
+.receipt-total strong { font-variant-numeric: tabular-nums; }
+.receipt-note { padding: 0 24px 22px; font-size: 11px; color: var(--muted); line-height: 1.7; }
+@media (max-width: 1000px) {
+ .receipt-head { display: none; }
+ .product-row.receipt-row { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+ .receipt-row .product-info, .receipt-row .receipt-actions { grid-column: 1 / -1; }
+ .receipt-mobile-label { display: block; font-size: 10px; color: var(--muted); margin-bottom: 6px; }
+ .receipt-actions { flex-direction: row; align-items: center; justify-content: space-between; flex-wrap: wrap; }
+}
+@media (max-width: 480px) { .product-row.receipt-row { padding: 18px 14px; gap: 12px; } .receipt-number { font-size: 12px; } .receipt-total { padding-left: 14px; padding-right: 14px; font-size: 15px; } .receipt-note { padding-left: 14px; padding-right: 14px; } }
+
+.pick-checkbox { min-height: 38px; display: inline-flex; align-items: center; gap: 9px; padding: 7px 11px; border: 1px solid var(--line); border-radius: 7px; color: var(--ink); font-size: 12px; font-weight: 600; cursor: pointer; }
+.pick-checkbox input { width: 18px; height: 18px; margin: 0; accent-color: var(--green); cursor: pointer; }
+.pick-checkbox.is-picked { background: #eaf5ec; border-color: #cfe4d3; color: var(--green-dark); cursor: pointer; }
+.pick-checkbox.is-picked input { cursor: pointer; }
+
+.app-view[hidden]{display:none!important}
+</style>
+    
+</head>
+<body data-page="orders"><a class="skip-link" href="#main">Skip to content</a><header class="site-header">
+        <div class="nav-inner"><a class="brand" href="#view=orders"><img class="brand-icon" src="https://www.woolworths.co.nz/assets/images/express/logo-wapple-green.svg" alt="Woolworths"/><span>Woolworths<span class="brand-subtitle">Order Assistant</span></span></a>
+            <nav aria-label="Main navigation"><a href="#view=orders" data-view="orders" aria-current="page">Orders</a><a
+                    href="#view=issues" data-view="issues"><span id="issues-nav-label">Issues</span> <span id="issue-count"
+                        class="nav-count" hidden>0</span></a><a href="#view=dashboard" data-view="dashboard">Dashboard</a></nav>
             <div class="role-control"><span class="role-label">View as</span><label class="sr-only" for="role">Current
                     role</label><select id="role">
                     <option>Picker</option>
                     <option>Supervisor</option>
                 </select></div>
         </div>
-    </header>
-    <main id="main">
+    </header><main id="main"><section class="app-view" data-view="orders" id="view-orders">
         <section class="page-heading">
             <div>
                 <p class="eyebrow">ONLINE ORDER FULFILMENT</p>
                 <h1>Orders</h1>
-                <p id="role-instruction"></p>
+                <p id="role-instruction-orders"></p>
             </div><button class="button secondary" data-action="refresh">↻ Refresh</button>
         </section>
-        <div id="sap-message" class="data-message loading" role="status">Loading orders…</div>
+        <div id="sap-message-orders" class="data-message loading" role="status">Loading orders…</div>
         <section aria-label="Sales order list">
             <div class="section-toolbar">
                 <p id="loaded-count" class="subtle">Pending orders</p>
@@ -51,16 +364,737 @@
             <div id="orders-list" class="orders-grid" aria-live="polite"></div>
         </section>
 
-    </main>
-    <footer class="site-footer">
+    </section><section class="app-view" data-view="details" id="view-details" hidden><a class="back-link" href="#view=orders">← Back to Orders</a>
+        <section class="page-heading">
+            <div>
+                <p class="eyebrow">PICKING WORKSPACE</p>
+                <h1 id="order-title">Order Details</h1>
+                <p id="role-instruction-details"></p>
+            </div>
+        </section>
+        <div id="sap-message-details" class="data-message" role="status" hidden></div>
+        <section id="order-details" class="details-panel" aria-labelledby="details-title">
+            <div class="details-header">
+                <div>
+                    <p class="eyebrow">PICKING DETAILS</p>
+                    <h2 id="details-title" tabindex="-1"></h2>
+                    <p class="subtle" id="details-progress"></p>
+                </div>
+                <div class="details-header-actions"><span id="details-status"></span><a class="inline-link"
+                        id="order-issues-link" href="#view=issues">View Order Issues →</a></div>
+            </div>
+            <div id="products"></div>
+            <div class="details-footer">
+                <p id="completion-help" class="subtle"></p><button class="button" id="complete-order"
+                    data-action="complete">Complete Order</button>
+            </div>
+        </section>
+        <dialog id="report-dialog" aria-labelledby="report-title">
+            <form id="report-form" class="dialog-body">
+                <p class="eyebrow">FULFILMENT EXCEPTION</p>
+                <h2 id="report-title">Report a product issue</h2>
+                <details class="report-context">
+                    <summary>Order and product details · filled automatically</summary>
+                    <div class="form-grid"><label>SAP Sales Order ID<input id="report-order" readonly></label><label>SAP
+                            Sales Order Item ID<input id="report-order-item" readonly></label></div><label>Product
+                        ID<input id="report-product" readonly></label><label>Original product description<input
+                            id="report-description" readonly></label>
+                </details><label for="issue-type">Issue type</label><select id="issue-type" required>
+                    <option value="Stock Availability Mismatch">Shelf out of stock / low quantity</option>
+                    <option value="Product Quality Issue">Product quality problem</option>
+                </select><p id="issue-type-help" class="subtle"></p>
+                <p id="auto-route-note" class="auto-route-note"></p><label for="issue-description">Short description
+                    (optional)</label><textarea id="issue-description" rows="2" maxlength="1200"
+                    placeholder="Add useful details for the handling teams."></textarea>
+
+                <p id="report-error" class="form-error" role="alert" hidden></p>
+                <div class="dialog-actions"><button class="button secondary" type="button"
+                        data-action="cancel-dialog">Cancel</button><button class="button" type="submit">Submit
+                        Issue</button></div>
+            </form>
+        </dialog>
+    </section><section class="app-view" data-view="issues" id="view-issues" hidden>
+        <section class="page-heading">
+            <div>
+                <p class="eyebrow">EXCEPTION MANAGEMENT</p>
+                <h1 id="issues-title">My Reports</h1>
+                <p id="role-instruction-issues"></p>
+            </div><a class="button secondary" href="#view=orders">View Orders →</a>
+        </section>
+        <div class="section-toolbar issue-toolbar">
+            <p id="issues-summary" class="subtle"></p>
+            <div class="filters"><label class="sr-only" for="issue-search">Search order, product, or issue</label><input
+                    type="search" id="issue-search" placeholder="Search order, product, or issue…"><label
+                    class="sr-only" for="issue-filter">Handling stage</label><select id="issue-filter"><option value="active" selected>Pending Issues</option><option value="processing">In Progress</option><option value="handled">Handled</option><option value="closed">Closed</option><option value="all">All Records</option></select></div>
+        </div>
+        <section id="issues-list" class="issues-grid" aria-label="Reported issues" aria-live="polite"></section>
+    </section><section class="app-view" data-view="dashboard" id="view-dashboard" hidden>
+        <section class="page-heading">
+            <div>
+                <p class="eyebrow">STORE OPERATIONS</p>
+                <h1>Dashboard</h1>
+
+            </div><button class="button secondary" data-action="refresh">↻ Refresh</button>
+        </section>
+        <div id="sap-message-dashboard" class="data-message loading" role="status">Loading orders…</div><section class="kpi-grid supervisor-kpis" aria-label="Supervisor overview"><article class="kpi-card"><div class="card-top"><span class="kpi-icon" aria-hidden="true">▤</span><span class="source-tag">SAP</span></div><h2>Loaded SAP Orders</h2><p class="kpi-value" id="loaded-sap-kpi">—</p></article><article class="kpi-card"><div class="card-top"><span class="kpi-icon" aria-hidden="true">✓</span><span class="source-tag local">LOCAL</span></div><h2>Completed Picking Orders</h2><p class="kpi-value" id="completed-kpi">—</p></article><article class="kpi-card"><div class="card-top"><span class="kpi-icon" aria-hidden="true">✓</span><span class="source-tag local">LOCAL</span></div><h2>Pending Issues</h2><p class="kpi-value" id="pending-kpi">—</p></article><article class="kpi-card"><div class="card-top"><span class="kpi-icon" aria-hidden="true">✓</span><span class="source-tag local">LOCAL</span></div><h2>Issue-Free Completion Rate</h2><p class="kpi-value" id="issue-free-rate">—</p></article></section><details class="panel dashboard-extra" id="monthly-comparison"><summary>Monthly comparison</summary><div class="table-scroll"><table class="data-table"><thead><tr><th>Measure</th><th id="last-month-label">Last month</th><th id="this-month-label">This month</th><th>Change</th></tr></thead><tbody><tr><th>Completed Picking Orders</th><td id="last-month-completed"></td><td id="this-month-completed"></td><td id="completed-change"></td></tr><tr><th>Issue-Free Completion Rate</th><td id="last-month-rate"></td><td id="this-month-rate"></td><td id="rate-change"></td></tr></tbody></table></div></details><p id="monthly-limitations" class="subtle"></p><section class="panel"><div class="panel-heading"><h2>Issue overview</h2><a href="#view=issues" class="inline-link">View Issues →</a></div><div id="overview-body"></div></section></section></main><footer class="site-footer">
         <div><span class="footer-dot"></span>INFOSYS 704 · University prototype<span class="footer-role">Current role:
                 <strong id="current-role">Picker</strong></span></div>
         <button class="button secondary small" type="button" id="reset-demo">Reset Demo</button>
-    </footer>
-    <dialog id="reset-dialog" aria-labelledby="reset-title"><div class="dialog-body"><p class="eyebrow">RESET DEMO</p><h2 id="reset-title">Clear local demo data?</h2><p>This removes this app’s saved orders, issues and picking progress from this browser. SAP data is not changed.</p><div class="dialog-actions"><button class="button secondary" type="button" data-action="cancel-dialog">Cancel</button><button class="button danger" type="button" id="reset-confirm">Clear Local Data</button></div></div></dialog>
+    </footer><dialog id="reset-dialog" aria-labelledby="reset-title"><div class="dialog-body"><p class="eyebrow">RESET DEMO</p><h2 id="reset-title">Clear local demo data?</h2><p>This removes this app’s saved orders, issues and picking progress from this browser. SAP data is not changed.</p><div class="dialog-actions"><button class="button secondary" type="button" data-action="cancel-dialog">Cancel</button><button class="button danger" type="button" id="reset-confirm">Clear Local Data</button></div></div></dialog><div id="notification" class="notification" role="status" aria-live="polite" hidden></div><script>
+(function (root) {
+  'use strict';
+  const STORAGE_KEY = 'ww_order_assistant_v4';
+  const PREVIOUS_KEYS = ['ww_order_assistant_v3', 'ww_order_assistant_v2', 'ww_order_assistant_v1'];
+  const STOCK = 'Stock Availability Mismatch', QUALITY = 'Product Quality Issue', PRICE = 'Price Discrepancy';
+  const STATUS = { PROCESSING: 'In Progress', HANDLED: 'Handled', CLOSED: 'Closed' };
+  const LEGACY_KEYS = [...PREVIOUS_KEYS, 'woolworths_issues', 'woolworths_picking_progress', 'woolworths_completed_orders', 'woolworths_order_completed_at', 'woolworths_order_outcomes', 'woolworths_order_fulfilment_outcomes', 'woolworths_user_role', 'woolworths_order_promises', 'woolworths_price_checks', 'woolworths_orders'];
+  const text = value => String(value ?? '').trim();
+  const clone = value => JSON.parse(JSON.stringify(value));
+  const validTime = value => typeof value === 'string' && value.trim() !== '' && Number.isFinite(Date.parse(value));
+  const itemKey = (orderId, itemId) => JSON.stringify([String(orderId), String(itemId)]);
+  const normalizeType = value => {
+    const raw = text(value);
+    if (raw === STOCK || raw === QUALITY || raw === PRICE) return raw;
+    const label = raw.toLowerCase();
+    if (/price|pricing/.test(label)) return PRICE;
+    if (/quality|damaged|damage|expired|spoiled|defective|broken|contaminat/.test(label)) return QUALITY;
+    if (/stock|shelf gap|inventory|shortage|out of stock/.test(label)) return STOCK;
+    return raw;
+  };
+  const recommendedTeam = type => type === PRICE ? 'IT Team' : 'Inventory Team';
+  const freshState = role => ({ schemaVersion: 4, role: role === 'Supervisor' ? 'Supervisor' : 'Picker', issues: [], retiredIssues: [], picking: {}, completed: {}, migration: null });
+  const overallStatus = issue => issue.status;
+  const orderIssues = (state, orderId) => state.issues.filter(issue => issue.orderId === orderId);
+  const itemIssues = (state, orderId, itemId) => orderIssues(state, orderId).filter(issue => issue.itemId === itemId);
 
-    <div id="notification" class="notification" role="status" aria-live="polite" hidden></div>
+  function validResult(type, result) {
+    if (!result) return false;
+    if (type === STOCK && result.kind === 'ORIGINAL') return true;
+    if (![STOCK, QUALITY].includes(type)) return false;
+    if (result.kind === 'SUBSTITUTE') return Boolean(text(result.substitute));
+    return result.kind === 'REMOVE';
+  }
+  function decisionSummary(result) {
+    if (!result) return '';
+    if (result.kind === 'SUBSTITUTE') return `Customer chose substitute: ${result.substitute}. Customer agreement recorded.${result.quantity ? ` ${result.quantity} ${result.unit || ''}.` : ''}${result.notes ? ` ${result.notes}` : ''}`;
+    if (result.kind === 'REMOVE') return `Customer chose to remove this product. Customer agreement recorded.${result.notes ? ` ${result.notes}` : ''}`;
+    if (result.kind === 'ORIGINAL') return `Inventory Team found and replenished the product.${result.notes ? ` ${result.notes}` : ''}`;
+    return '';
+  }
+  function itemState(state, orderId, itemId) {
+    const issues = itemIssues(state, orderId, itemId);
+    const pending = issues.filter(issue => issue.needsReview || issue.status === STATUS.PROCESSING || !validResult(issue.type, issue.result));
+    if (pending.length) return { status: 'Awaiting Treatment', ready: false, pending, issues };
+    const handledIssue = issues.find(issue => [STOCK, QUALITY].includes(issue.type) && issue.result);
+    const decision = handledIssue?.result;
+    const expected = decision?.kind === 'REMOVE' ? 'Removed by Agreement' : decision?.kind === 'SUBSTITUTE' ? 'Substitute Picked' : 'Picked';
+    const allClosed = issues.every(issue => issue.status === STATUS.CLOSED);
+    const ready = state.picking[itemKey(orderId, itemId)] === expected && allClosed;
+    return { status: ready ? expected : expected === 'Removed by Agreement' ? 'Awaiting Removal Confirmation' : issues.length ? 'Ready to Pick' : 'Not Started', ready, decision, issues };
+  }
+  function orderReadiness(state, order) {
+    const lines = order.items.map(item => ({ id: item.id, ...itemState(state, order.id, item.id) }));
+    const untreated = orderIssues(state, order.id).filter(issue => issue.needsReview || issue.status === STATUS.PROCESSING).length;
+    const open = orderIssues(state, order.id).filter(issue => issue.status !== STATUS.CLOSED).length;
+    return { lines, remaining: lines.filter(line => !line.ready).length, untreated, open, ready: lines.length > 0 && lines.every(line => line.ready) && open === 0 };
+  }
 
-</body>
+  function migrate(old, at) {
+    const state = freshState(old.role === 'Supervisor' || old.role === 'Team' || old.role === 'supervisor' ? 'Supervisor' : 'Picker');
+    state.picking = clone(old.picking || {});
+    state.completed = Array.isArray(old.completed) ? Object.fromEntries(old.completed.map(id => [String(id), { completedAt: null, legacy: true, issueHistoryComplete: false }])) : clone(old.completed || {});
+    for (const [id, value] of Object.entries(state.completed)) {
+      if (!value || typeof value !== 'object') state.completed[id] = { completedAt: null, legacy: true, issueHistoryComplete: false, original: value };
+      const record = state.completed[id];
+      if (!validTime(record.completedAt)) record.completedAt = null;
+      if (record.issueHistoryComplete !== true) record.legacy = true;
+    }
+    state.issues = (old.issues || []).map(source => {
+      const originalType = text(source.type || source.issueType);
+      const type = normalizeType(originalType);
+      const modern = Boolean(source.orderHandling);
+      const previous = source.orderHandling?.result;
+      const candidate = previous ? { ...clone(previous), notes: previous.notes || previous.basis || '' } : null;
+      const acknowledged = modern && ['Awaiting Picker Confirmation', 'Confirmed'].includes(source.orderHandling.status) && !source.needsReview && validResult(type, candidate);
+      const orderId = String(source.orderId ?? ''), itemId = String(source.itemId ?? source.orderItemId ?? '');
+      const completion = state.completed[orderId];
+      const saved = completion?.outcomes?.find(line => line.id === itemId);
+      const expected = candidate?.kind === 'REMOVE' ? 'Removed by Agreement' : candidate?.kind === 'SUBSTITUTE' ? 'Substitute Picked' : 'Picked';
+      const fulfilled = saved?.status === expected || (expected !== 'Removed by Agreement' && state.picking[itemKey(orderId, itemId)] === expected);
+      const status = acknowledged ? fulfilled ? STATUS.CLOSED : STATUS.HANDLED : STATUS.PROCESSING;
+      const issue = {
+        id: String(source.id || source.issueId || `LEG-${crypto.randomUUID()}`), orderId, itemId,
+        productId: String(source.productId ?? source.product ?? ''), productDescription: source.productDescription || source.sapItem?.description || '',
+        sapItem: source.sapItem ? clone(source.sapItem) : null, type, description: String(source.description ?? source.notes ?? ''), observations: clone(source.observations || {}),
+        team: recommendedTeam(type), status, result: acknowledged ? candidate : null,
+        createdAt: source.createdAt || null, handledAt: acknowledged ? source.orderHandling.submittedAt || null : null,
+        closedAt: status === STATUS.CLOSED ? source.closedAt || completion?.completedAt || null : null,
+        needsReview: Boolean(source.needsReview) || !modern || ![STOCK, QUALITY, PRICE].includes(type) || !itemId,
+        legacy: clone(source), events: Array.isArray(source.events) ? clone(source.events) : []
+      };
+      if (!acknowledged && state.picking[itemKey(orderId, itemId)] !== undefined) {
+        issue.legacyPickingStatus = state.picking[itemKey(orderId, itemId)]; delete state.picking[itemKey(orderId, itemId)];
+      }
+      issue.events.push({ at, role: 'System', action: 'Simplified workflow migration', detail: `Previous status and workflow retained in history. New responsible team: ${issue.team}. No customer agreement inferred.` });
+      return issue;
+    });
+    state.migration = { at, from: old.schemaVersion || 1, note: 'Original records retained. Known valid results reused; incomplete legacy records require Supervisor review.' };
+    return state;
+  }
 
+  function createStore(storage, now = () => new Date().toISOString()) {
+    function parse(key) { const raw = storage.getItem(key); if (raw === null) return null; try { return JSON.parse(raw); } catch { throw new Error('Local data could not be read. Original records have not been overwritten.'); } }
+    function write(state) { try { storage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch { throw new Error('Your browser could not save this change. Check local storage and free space.'); } }
+    function archivePriceIssues(state) {
+      if (!Array.isArray(state.retiredIssues)) state.retiredIssues = [];
+      const retained = [];
+      for (const issue of state.issues) {
+        issue.type = normalizeType(issue.type || issue.issueType);
+        if (issue.type === PRICE) state.retiredIssues.push({ ...issue, retiredAt: now(), retirementReason: 'Price differences can reflect promotions; this issue type is no longer supported.' });
+        else retained.push(issue);
+      }
+      if (retained.length !== state.issues.length) { state.issues = retained; return true; }
+      return false;
+    }
+    function read() {
+      const current = parse(STORAGE_KEY);
+      if (current !== null) {
+        if (current.schemaVersion !== 4 || !Array.isArray(current.issues) || !current.picking || !current.completed) throw new Error('Unsupported local data format. Records have not been changed.');
+        let normalized = false;
+        for (const issue of current.issues) {
+          const type = normalizeType(issue.type || issue.issueType);
+          if (type !== issue.type) { issue.type = type; normalized = true; }
+          const team = recommendedTeam(type);
+          if (issue.status !== STATUS.CLOSED && issue.team !== team) { issue.team = team; normalized = true; }
+        }
+        if (archivePriceIssues(current)) normalized = true;
+        if (normalized) write(current);
+        return current;
+      }
+      let old = null;
+      for (const key of PREVIOUS_KEYS) { old = parse(key); if (old !== null) break; }
+      if (old === null && (storage.getItem('woolworths_issues') !== null || storage.getItem('woolworths_completed_orders') !== null)) {
+        const picking = {}, nested = parse('woolworths_picking_progress') || {}, times = parse('woolworths_order_completed_at') || {};
+        for (const [orderId, items] of Object.entries(nested)) for (const [id, status] of Object.entries(items)) picking[itemKey(orderId, id)] = status;
+        old = { issues: parse('woolworths_issues') || [], picking, completed: Object.fromEntries((parse('woolworths_completed_orders') || []).map(id => [String(id), { completedAt: times[id] || null, legacy: true }])) };
+      }
+      if (old !== null) {
+        if (!Array.isArray(old.issues) || !old.picking || !old.completed) throw new Error('Previous records cannot be migrated safely. They have been retained.');
+        const state = migrate(old, now()); archivePriceIssues(state); write(state); return state;
+      }
+      const state = freshState(); archivePriceIssues(state); write(state); return state;
+    }
+    function change(update) { const state = read(); update(state); write(state); return state; }
+    function requireRole(state, role) { if (state.role !== role) throw new Error(`Switch to ${role} to perform this action.`); }
+    function issueById(state, id) { const issue = state.issues.find(issue => issue.id === id); if (!issue) throw new Error('This issue is no longer available.'); return issue; }
+    function record(state, issue, action, detail) { issue.events.push({ at: now(), role: state.role, action, detail }); }
+    function itemRequired(order, id) { if (!order?.items?.some(item => item.id === id) || order.itemsComplete !== true) throw new Error('Load the complete SAP item list before continuing.'); }
+    function pendingOrder(state, id) { if (state.completed[id]) throw new Error('This order is already completed.'); }
+    function required(value, label) { const result = text(value); if (!result) throw new Error(`${label} is required.`); if (result.length > 1200) throw new Error(`${label} must be 1,200 characters or fewer.`); return result; }
+    function closeLine(state, orderId, itemId, outcome) {
+      for (const issue of itemIssues(state, orderId, itemId)) if (issue.status === STATUS.HANDLED) { issue.status = STATUS.CLOSED; issue.closedAt = now(); record(state, issue, 'Issue closed by fulfilment', outcome); }
+    }
+    return {
+      read,
+      setRole(role) { if (!['Picker', 'Supervisor'].includes(role)) throw new Error('Choose Picker or Supervisor.'); return change(state => { state.role = role; }); },
+      report(order, itemId, type, description = '', observations = {}) {
+        itemRequired(order, itemId); let id;
+        change(state => {
+          requireRole(state, 'Picker'); pendingOrder(state, order.id);
+          if (![STOCK, QUALITY].includes(type)) throw new Error('Choose stock availability or product quality.');
+          if (itemIssues(state, order.id, itemId).some(issue => issue.status !== STATUS.CLOSED)) throw new Error('This order item already has an active issue.');
+          if (text(description).length > 1200) throw new Error('Keep the description to 1,200 characters or fewer.');
+          const item = order.items.find(item => item.id === itemId); id = `ISS-${crypto.randomUUID()}`;
+          const issue = { id, orderId: order.id, itemId, productId: item.productId, productDescription: item.description || '', sapItem: clone(item), type, description: text(description), team: recommendedTeam(type), status: STATUS.PROCESSING, result: null, needsReview: false, reportedBy: 'Picker', createdAt: now(), events: [] };
+          record(state, issue, 'Reported and automatically categorised', `${issue.team} · In Progress. Supervisor records the team's result.`);
+          state.issues.unshift(issue); delete state.picking[itemKey(order.id, itemId)];
+        }); return id;
+      },
+      saveResult(id, values) {
+        return change(state => {
+          requireRole(state, 'Supervisor'); const issue = issueById(state, id);
+          if (issue.status !== STATUS.PROCESSING) throw new Error('Only an issue In Progress can receive a treatment result.');
+          if (issue.needsReview) {
+            if (![STOCK, QUALITY].includes(values.type)) throw new Error('Choose a supported issue type.');
+            issue.type = values.type; issue.itemId = required(values.itemId || issue.itemId, 'Sales Order Item ID'); issue.team = recommendedTeam(issue.type);
+            if (!issue.orderId) throw new Error('The legacy record has no order ID and requires manual recovery.');
+          }
+          const notes = text(values.notes); if (notes.length > 1200) throw new Error('Keep treatment notes to 1,200 characters or fewer.');
+          let result;
+          if (![STOCK, QUALITY].includes(issue.type)) throw new Error('This issue type is no longer supported.');
+          const allowed = issue.type === STOCK ? ['ORIGINAL', 'SUBSTITUTE', 'REMOVE'] : ['SUBSTITUTE', 'REMOVE'];
+          if (!allowed.includes(values.kind)) throw new Error('Choose a valid handling result for this issue.');
+          result = { kind: values.kind, notes };
+          if (values.kind === 'SUBSTITUTE') result.substitute = required(values.substitute, 'Substitute product');
+          if (['SUBSTITUTE', 'REMOVE'].includes(values.kind)) {
+            if (values.agreement !== true) throw new Error('Confirm that customer agreement was obtained.');
+            result.agreedOutsideApp = true;
+          }
+          issue.result = result; issue.status = STATUS.HANDLED; issue.handledAt = now(); issue.needsReview = false;
+          record(state, issue, 'Treatment saved', decisionSummary(result));
+        });
+      },
+      pick(order, itemId, substitute = false) {
+        itemRequired(order, itemId);
+        return change(state => {
+          requireRole(state, 'Picker'); pendingOrder(state, order.id);
+          const line = itemState(state, order.id, itemId);
+          if (line.pending?.length) throw new Error('This item still has an untreated issue.');
+          if (line.decision?.kind === 'REMOVE') throw new Error('Use Confirm Removal; this item must not be marked Picked.');
+          if (line.ready) throw new Error('This item already has a final fulfilment outcome.');
+          if ((line.decision?.kind === 'SUBSTITUTE') !== substitute) throw new Error('Pick the agreed original or substitute product.');
+          const outcome = substitute ? 'Substitute Picked' : 'Picked';
+          state.picking[itemKey(order.id, itemId)] = outcome; closeLine(state, order.id, itemId, outcome);
+        });
+      },
+      unpick(order, itemId) {
+        itemRequired(order, itemId);
+        return change(state => {
+          requireRole(state, 'Picker'); pendingOrder(state, order.id);
+          const key = itemKey(order.id, itemId);
+          const outcome = state.picking[key];
+          if (!['Picked', 'Substitute Picked'].includes(outcome)) throw new Error('This item is not currently picked.');
+          delete state.picking[key];
+          for (const issue of itemIssues(state, order.id, itemId)) {
+            if (issue.status === STATUS.CLOSED && issue.result && issue.events?.some(event => event.action === 'Issue closed by fulfilment')) {
+              issue.status = STATUS.HANDLED;
+              issue.closedAt = null;
+              record(state, issue, 'Picking undone', 'Item unchecked. Pick it again to close this issue.');
+            }
+          }
+        });
+      },
+      confirmRemoval(order, itemId) {
+        itemRequired(order, itemId);
+        return change(state => {
+          requireRole(state, 'Picker'); pendingOrder(state, order.id);
+          const line = itemState(state, order.id, itemId);
+          if (line.pending?.length || line.decision?.kind !== 'REMOVE') throw new Error('A valid customer-agreed removal must be recorded first.');
+          if (line.ready) throw new Error('Removal is already confirmed.');
+          state.picking[itemKey(order.id, itemId)] = 'Removed by Agreement'; closeLine(state, order.id, itemId, 'Removed by Agreement');
+        });
+      },
+      complete(order) {
+        return change(state => {
+          requireRole(state, 'Picker'); pendingOrder(state, order.id);
+          if (order.itemsComplete !== true) throw new Error('Load the complete SAP item list before completing this order.');
+          const readiness = orderReadiness(state, order);
+          if (!readiness.ready) throw new Error(`${readiness.remaining} items remaining · ${readiness.untreated} untreated issues. Pick or confirm removal for every item.`);
+          const affected = orderIssues(state, order.id).length > 0;
+          state.completed[order.id] = { completedAt: now(), issueHistoryComplete: true, issueFree: !affected, hadIssue: affected, items: clone(order.items), outcomes: readiness.lines.map(line => ({ id: line.id, status: line.status, decision: line.decision || null })) };
+        });
+      },
+      reset() {
+        let role = 'Picker'; try { role = read().role; } catch { /* Explicit reset can recover corrupt app-owned data. */ }
+        write(freshState(role)); for (const key of LEGACY_KEYS) storage.removeItem(key);
+      }
+    };
+  }
+  function dashboardStats(state, at = new Date()) {
+    const completed = Object.entries(state.completed);
+    const issueFree = ([id, record]) => record.issueHistoryComplete === true && record.issueFree === true && !state.issues.some(issue => issue.orderId === id);
+    const freeCount = completed.filter(issueFree).length;
+    const unconfirmedOrders = new Set(state.issues.filter(issue => issue.status === STATUS.PROCESSING).map(issue => issue.orderId).filter(Boolean));
+    const repeated = new Map();
+    for (const issue of state.issues) {
+      if (!issue.productId) continue;
+      const key = JSON.stringify([issue.productId, issue.type]);
+      if (!repeated.has(key)) repeated.set(key, { productId: issue.productId, type: issue.type, total: 0, active: 0 });
+      const entry = repeated.get(key); entry.total++; if (overallStatus(issue) !== 'Closed') entry.active++;
+    }
+    const monthFormat = new Intl.DateTimeFormat('en-NZ', { timeZone: 'Pacific/Auckland', year: 'numeric', month: '2-digit' });
+    function monthKey(date) { const parts = monthFormat.formatToParts(date); return `${parts.find(p => p.type === 'year').value}-${parts.find(p => p.type === 'month').value}`; }
+    const currentKey = monthKey(at); const [year, month] = currentKey.split('-').map(Number);
+    const previousKey = monthKey(new Date(Date.UTC(year, month - 2, 15)));
+    function monthStats(key) {
+      const records = completed.filter(([, record]) => validTime(record.completedAt) && monthKey(new Date(record.completedAt)) === key);
+      const count = records.filter(issueFree).length;
+      return { key, completed: records.length, free: count, rate: records.length ? count / records.length * 100 : null };
+    }
+    const current = monthStats(currentKey), previous = monthStats(previousKey);
+    return { completed: completed.length, pending: state.issues.filter(issue => issue.status !== STATUS.CLOSED).length, processing: state.issues.filter(issue => issue.status === STATUS.PROCESSING).length, awaitingHandling: unconfirmedOrders.size, issueFree: freeCount, rate: completed.length ? freeCount / completed.length * 100 : null, repeated: [...repeated.values()].filter(entry => entry.total > 1).sort((a, b) => b.total - a.total), current, previous, countChange: previous.completed ? current.completed - previous.completed : null, rateChange: previous.rate !== null && current.rate !== null ? current.rate - previous.rate : null, missingTimes: completed.filter(([, record]) => !validTime(record.completedAt)).length, uncertainHistory: completed.filter(([, record]) => record.issueHistoryComplete !== true).length };
+  }
+
+  const api = { STORAGE_KEY, PREVIOUS_KEYS, STOCK, QUALITY, STATUS, recommendedTeam, itemKey, freshState, overallStatus, itemState, orderReadiness, createStore, dashboardStats, migrate, decisionSummary };
+  if (typeof module !== 'undefined' && module.exports) module.exports = api;
+  else root.OrderWorkflow = api;
+}(typeof window !== 'undefined' ? window : globalThis));
+
+(function () {
+  'use strict';
+  const SAP_SERVICE_URL = 'https://sandbox.api.sap.com/s4hanacloud/sap/opu/odata4/sap/api_salesorder/srvd_a2x/sap/salesorder/0001';
+  const SAP_API_KEY = "lO4brxafMdMCCz20AOw0b7uy2IDRpeZI";
+  const W = window.OrderWorkflow;
+  const { STOCK, QUALITY, STATUS: S } = W;
+  const $ = selector => document.querySelector(selector);
+  const esc = value => String(value ?? '').replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
+  let page = 'orders';
+  let orderId = null;
+  const store = W.createStore(localStorage);
+  let state = W.freshState();
+  let sap = null;
+  let order = null;
+  let reportingItem = null;
+  let focusedIssue = null;
+  let loading = false;
+  let noticeTimer;
+  const percent = value => value === null ? '—' : `${value.toFixed(1)}%`;
+  const time = value => value && Number.isFinite(Date.parse(value)) ? new Date(value).toLocaleString('en-NZ', { timeZone: 'Pacific/Auckland', dateStyle: 'medium', timeStyle: 'short' }) : 'Not recorded';
+  const value = (form, name) => form.querySelector(`[name="${name}"]`)?.value || '';
+  const checked = (form, name) => form.querySelector(`[name="${name}"]`)?.checked === true;
+  const required = (condition, attribute = 'required') => condition ? attribute : '';
+  const orderLink = (id, item = '') => `#open-order/${encodeURIComponent(id)}${item ? `?item=${encodeURIComponent(item)}` : ''}`;
+  const issueLink = id => `#view=issues${id ? `&issue=${encodeURIComponent(id)}` : ''}`;
+
+  function notify(message, error = false, href = '') {
+    clearTimeout(noticeTimer);
+    const node = $('#notification');
+    node.innerHTML = `${esc(message)}${href ? ` <a href="${esc(href)}">View Issue →</a>` : ''}`;
+    node.className = `notification ${error ? 'error' : 'success'}`;
+    node.hidden = false;
+    if (!error && !href) noticeTimer = setTimeout(() => { node.hidden = true; }, 6500);
+  }
+  function badge(status) {
+    const style = [S.CLOSED, 'Picked', 'Substitute Picked', 'Removed by Agreement', 'Completed'].includes(status) ? 'closed'
+      : [S.HANDLED, 'Ready to Pick', 'Awaiting Removal Confirmation'].includes(status) ? 'resolved'
+        : status === S.PROCESSING || status === 'Picking' ? 'progress' : 'neutral';
+    return `<span class="badge ${style}"><span class="status-dot" aria-hidden="true"></span>${esc(status)}</span>`;
+  }
+  function read() {
+    try { state = store.read(); return true; } catch (error) { notify(error.message, true); return false; }
+  }
+  function act(action, message) {
+    try { action(); read(); render(); if (message) notify(message); return true; }
+    catch (error) { notify(error.message, true); return false; }
+  }
+  function renderShell() {
+    $('#role').value = state.role;
+    $('#current-role').textContent = state.role;
+    const count = state.issues.filter(issue => W.overallStatus(issue) !== 'Closed').length;
+    $('#issue-count').textContent = count; $('#issue-count').hidden = !count;
+    const navOrders = $('nav a[data-view="orders"]');
+    const navIssues = $('nav a[data-view="issues"]');
+    const navDashboard = $('nav a[data-view="dashboard"]');
+    [navOrders, navIssues, navDashboard].forEach(link => link?.toggleAttribute('aria-current', link.dataset.view === page));
+    $('#issues-nav-label').textContent = state.role === 'Picker' ? 'My Reports' : 'Issues';
+    const instructions = {
+      orders: 'Open an order, pick its items, or report a problem.',
+      details: state.role === 'Picker' ? 'Pick each item. Report a stock or quality problem if needed.' : 'Order picking is available in the Picker view.',
+      issues: state.role === 'Picker' ? 'Once handled, go to the item and pick it or confirm its removal. The issue closes automatically.' : 'Reports are already In Progress and categorised by team. Record the result in one form.'
+    };
+    const instruction = $(`#role-instruction-${page}`); if (instruction) instruction.textContent = instructions[page] || '';
+    if ($('#issues-title')) $('#issues-title').textContent = state.role === 'Picker' ? 'My Reports' : 'Issues';
+  }
+
+  function renderOrders() {
+    const filter = $('#order-filter').value;
+    const merged = new Map((sap?.orders || []).map(item => [item.id, item]));
+    // Local history is only added when explicitly viewing completed orders.
+    if (filter === 'completed') {
+      for (const [id, record] of Object.entries(state.completed)) if (!merged.has(id)) merged.set(id, { id, items: record.items || [], localRecord: true });
+    }
+    const all = [...merged.values()];
+    const search = $('#order-search').value.trim().toLowerCase();
+    const shown = all.filter(item => item.id.toLowerCase().includes(search) && (filter === 'all' || Boolean(state.completed[item.id]) === (filter === 'completed')));
+    $('#loaded-count').textContent = `${sap?.orders.length || 0} orders · ${Object.keys(state.completed).length} completed`;
+    $('#orders-list').innerHTML = shown.length ? shown.map(item => {
+      const done = state.completed[item.id];
+      const readiness = W.orderReadiness(state, item);
+      const picked = readiness.lines.filter(line => ['Picked', 'Substitute Picked'].includes(line.status)).length;
+      const status = done ? 'Completed' : readiness.untreated ? 'Awaiting Treatment' : picked ? 'Picking' : 'Not Started';
+      return `<article class="order-card"><div class="card-top"><span class="eyebrow">SALES ORDER</span>${badge(status)}</div><h2>#${esc(item.id)}</h2>
+        <div class="card-summary"><span>${item.items.length ? `${item.items.length} ${item.localRecord || sap?.complete ? '' : 'loaded '}items` : 'Legacy record'}</span><span>${done ? 'Completed locally' : `${picked} picked`}</span></div>
+        ${item.items.length ? `<progress value="${done ? item.items.length : readiness.lines.filter(line => line.ready).length}" max="${item.items.length}" aria-label="Fulfilment progress for order ${esc(item.id)}"></progress>` : '<p class="subtle card-note">Original items will load when opened.</p>'}
+        <a class="button secondary full" href="${orderLink(item.id)}">View Details <span aria-hidden="true">→</span></a></article>`;
+    }).join('') : `<div class="empty-state"><h2>${loading ? 'Loading orders…' : 'No matching orders'}</h2><p>Try another order ID or switch between All, Pending, and Completed.</p></div>`;
+  }
+
+  function renderDecision(result, title = 'Local order handling decision') {
+    if (!result) return '';
+    return `<div class="local-decision"><strong>${esc(title)}</strong><p>${esc(W.decisionSummary(result))}</p></div>`;
+  }
+  function receiptPrice(item) {
+    const fields = item.sapFields || {};
+    const numeric = value => value !== null && value !== undefined && String(value).trim() !== '' && Number.isFinite(Number(value)) ? Number(value) : null;
+    const amount = numeric(fields.NetAmount);
+    const quantity = numeric(item.quantity);
+    const currency = fields.TransactionCurrency;
+    const format = value => {
+      if (value === null || !currency) return '—';
+      try { return new Intl.NumberFormat('en-NZ', { style: 'currency', currency, currencyDisplay: 'narrowSymbol' }).format(value); }
+      catch { return '—'; }
+    };
+    return { amount, currency, unit: format(amount !== null && quantity > 0 ? amount / quantity : null), subtotal: format(amount), format };
+  }
+  function renderDetails() {
+    const panel = $('#order-details');
+    panel.hidden = !order;
+    if (!order) return;
+    const completion = state.completed[order.id];
+    const readiness = W.orderReadiness(state, order);
+    $('#order-title').textContent = `Order #${order.id}`;
+    $('#details-title').textContent = 'Picking list';
+    $('#order-issues-link').href = issueLink();
+    $('#order-issues-link').hidden = !state.issues.some(issue => issue.orderId === order.id);
+    $('#details-status').innerHTML = badge(completion ? 'Completed' : readiness.untreated ? 'Awaiting Treatment' : 'Picking');
+    $('#details-progress').textContent = `${readiness.remaining} items remaining · ${readiness.untreated} untreated issues`;
+    if (!order.itemsComplete) {
+      $('#products').innerHTML = `<p class="data-message ${order.loadError ? 'error' : 'loading'}">${esc(order.loadError || 'Loading the complete order item list…')}</p>`;
+      $('#complete-order').hidden = true; $('#completion-help').textContent = 'All order items must load before fulfilment can continue.';
+      return;
+    }
+    const savedOutcomes = completion?.outcomes || [];
+    const totals = new Map();
+    let missingPrices = false;
+    for (const item of order.items) {
+      const price = receiptPrice(item);
+      if (price.amount === null || !price.currency) missingPrices = true;
+      else totals.set(price.currency, (totals.get(price.currency) || 0) + price.amount);
+    }
+    const totalText = [...totals].map(([currency, amount]) => receiptPrice({ sapFields: { NetAmount: amount, TransactionCurrency: currency } }).subtotal).join(' + ');
+    $('#products').innerHTML = '<div class="receipt-head" aria-hidden="true"><span>Product</span><span>Quantity</span><span>Unit price</span><span>Subtotal</span><span>Status / Actions</span></div>' + order.items.map(item => {
+      const line = W.itemState(state, order.id, item.id);
+      const saved = completion ? savedOutcomes.find(outcome => outcome.id === item.id) : null;
+      const status = saved?.status || (completion?.legacy ? 'Legacy outcome not recorded' : line.status);
+      const quantity = item.quantity === null || item.quantity === undefined ? '—' : `${item.quantity} ${item.unit}`;
+      const stockDecision = saved?.decision || line.decision;
+      const active = line.issues.find(issue => W.overallStatus(issue) !== 'Closed');
+      let actions = '';
+      if (!completion && state.role === 'Picker') {
+        const sub = stockDecision?.kind === 'SUBSTITUTE';
+        const removing = stockDecision?.kind === 'REMOVE';
+        if (removing) {
+          if (!line.ready) actions += `<button class="button small" data-action="remove-item" data-item="${esc(item.id)}" ${required(Boolean(line.pending?.length), 'disabled')}>Confirm Removal</button>`;
+        } else actions += `<label class="pick-checkbox ${line.ready ? 'is-picked' : ''}"><input type="checkbox" data-action="pick" data-item="${esc(item.id)}" data-substitute="${sub}" aria-label="Mark ${esc(item.description || item.productId || 'item')} picked" ${line.ready ? 'checked' : required(Boolean(line.pending?.length), 'disabled')}><span>${line.ready ? `${esc(status)} · click to undo` : sub ? 'Pick substitute' : 'Pick item'}</span></label>`;
+        if (!active && !line.ready) actions += `<button class="button secondary small" data-action="report" data-item="${esc(item.id)}">Report Issue</button>`;
+      }
+      const price = receiptPrice(item);
+      return `<article class="product-row receipt-row" id="item-${esc(item.id)}"><div class="product-info"><h3>${esc(item.description || item.productId || '—')}</h3>
+        ${renderDecision(stockDecision)}
+        ${line.issues.length ? `<a class="issue-link" href="#view=issues&issue=${encodeURIComponent((line.pending?.[0] || active || line.issues[0]).id)}">${line.pending?.length ? 'Waiting for treatment' : active ? 'Handled · pick or confirm removal to close' : 'View closed issue'} →</a>` : ''}
+        ${completion?.legacy ? '<p class="legacy-notice">Legacy completed order. Historic fulfilment decisions may not be recorded.</p>' : ''}</div>
+        <div class="receipt-number"><span class="receipt-mobile-label">Quantity</span><strong>${esc(quantity)}</strong></div>
+        <div class="receipt-number"><span class="receipt-mobile-label">Unit price</span>${esc(price.unit)}</div>
+        <div class="receipt-number"><span class="receipt-mobile-label">Subtotal</span><strong>${esc(price.subtotal)}</strong></div>
+        <div class="receipt-actions"><div class="product-status">${badge(status)}</div><div class="product-actions">${actions}</div></div></article>`;
+    }).join('') + `<div class="receipt-total"><span>${missingPrices ? 'Known items total' : 'Order total'}</span><strong>${esc(totalText || '—')}</strong></div>`;
+    $('#complete-order').hidden = state.role !== 'Picker';
+    $('#complete-order').disabled = Boolean(completion) || !order.items.length;
+    $('#complete-order').textContent = completion ? '✓ Order Completed' : 'Complete Order';
+    $('#completion-help').textContent = completion ? `Completed ${time(completion.completedAt)}.${completion.legacy ? ' Historic item details are incomplete.' : ''}` : `${readiness.remaining} items remaining · ${readiness.untreated} untreated issues.`;
+  }
+
+  function treatmentForm(issue) {
+    const result = issue.result || {};
+    const type = [STOCK, QUALITY].includes(issue.type) ? issue.type : '';
+    const kind = result.kind || (type === QUALITY ? 'SUBSTITUTE' : 'ORIGINAL');
+    return `<form class="treatment-form" data-issue="${esc(issue.id)}"><input name="type" type="hidden" value="${esc(type)}"><input name="itemId" type="hidden" value="${esc(issue.itemId)}">
+      <div class="stock-treatment"><label>Handling result<select name="kind" required>${(type === QUALITY ? [['SUBSTITUTE','Customer chose a substitute product'],['REMOVE','Customer chose to remove the product']] : [['ORIGINAL','Inventory Team found and replenished the product'],['SUBSTITUTE','Customer chose a substitute product'],['REMOVE','Customer chose to remove the product']]).map(([key,label])=>`<option value="${key}" ${kind===key?'selected':''}>${label}</option>`).join('')}</select></label><div class="substitute-fields" ${kind!=='SUBSTITUTE'?'hidden':''}><label>Substitute product name or ID<input name="substitute" value="${esc(result.substitute)}" ${required(kind==='SUBSTITUTE')}></label></div><label class="check-label agreement-field" ${kind==='ORIGINAL'?'hidden':''}><input type="checkbox" name="agreement" ${required(Boolean(result.agreedOutsideApp),'checked')} ${required(kind!=='ORIGINAL')}>Customer agreement was obtained.</label></div>
+<label class="result-notes-label">Handling notes (optional)<textarea name="notes" rows="2" maxlength="1200" placeholder="Optional">${esc(result.notes)}</textarea></label><button class="button small" type="submit">Save as Handled</button></form>`;
+  }
+  function issueActions(issue) {
+    if (state.role === 'Supervisor') {
+      if (issue.status === S.PROCESSING) return treatmentForm(issue);
+      return `<p class="action-hint">${issue.status === S.HANDLED ? 'Waiting for Picker to complete this item.' : 'This issue is closed.'}</p>`;
+    }
+    if (issue.status === S.PROCESSING) return `<p class="action-hint">Waiting for a result from ${esc(issue.team)}. Supervisor records the handling on behalf of the team.</p>`;
+    return `<p class="action-hint">${issue.status===S.HANDLED ? issue.result?.kind==='REMOVE'?'Ready: confirm removal at the order item to close this issue.':'Ready: pick the original or agreed substitute item to close this issue.' : 'Closed through picking or confirmed removal.'}</p><a class="button small" href="${orderLink(issue.orderId,issue.itemId)}">Go to Order Item →</a>`;
+  }
+  function renderIssues() {
+    const scope = state.issues.filter(issue => !orderId || issue.orderId===orderId);
+    const filter = $('#issue-filter').value, search = $('#issue-search').value.trim().toLowerCase();
+    const shown = scope.filter(issue => (filter==='all'||filter==='active'&&issue.status!==S.CLOSED||filter==='processing'&&issue.status===S.PROCESSING||filter==='handled'&&issue.status===S.HANDLED||filter==='closed'&&issue.status===S.CLOSED) && [issue.id,issue.orderId,issue.productId,issue.productDescription,issue.type].some(data=>String(data||'').toLowerCase().includes(search)));
+    $('#issues-summary').innerHTML = `${orderId?`Order #${esc(orderId)} · <a href="#view=issues">All Issues</a> · `:''}${scope.filter(issue=>issue.status!==S.CLOSED).length} pending issues`;
+    $('#issues-list').innerHTML = shown.length ? shown.map(issue=>`<article class="issue-card simple-issue ${issue.id===focusedIssue?'highlighted':''}" id="${esc(issue.id)}" tabindex="-1"><div class="card-top"><span class="type-label">${esc(issue.type)}</span>${badge(issue.status)}</div><h2>${esc(issue.productDescription||issue.productId||'Product details unavailable')}</h2><p class="issue-context">Order #${esc(issue.orderId)} · Product ${esc(issue.productId||'not recorded')} · Item ${esc(issue.itemId||'to check')}</p>${issue.description?`<p class="issue-description">${esc(issue.description)}</p>`:''}${renderDecision(issue.result,'Treatment result')}
+      <div class="simple-treatment">${issueActions(issue)}</div><div class="issue-footer"><span>Reported by ${esc(issue.reportedBy || issue.events?.find(entry => entry.role === 'Picker' && /report/i.test(entry.action))?.role || 'Not recorded')}</span><a href="${orderLink(issue.orderId,issue.itemId)}">View Order & Item →</a></div></article>`).join('') : '<div class="empty-state"><h2>No matching issues</h2><p>Try another status or search.</p></div>';
+  }
+
+  function renderDashboard() {
+    const stats = W.dashboardStats(state);
+    $('#loaded-sap-kpi').textContent = sap?.orders.length ?? '—';
+    $('#completed-kpi').textContent = stats.completed;
+    $('#pending-kpi').textContent = stats.pending;
+    $('#issue-free-rate').textContent = percent(stats.rate);
+    const monthLabel = key => new Date(`${key}-15T12:00:00Z`).toLocaleDateString('en-NZ', { timeZone: 'Pacific/Auckland', month: 'long', year: 'numeric' });
+    $('#this-month-label').textContent = monthLabel(stats.current.key);
+    $('#last-month-label').textContent = monthLabel(stats.previous.key);
+    $('#this-month-completed').textContent = stats.current.completed;
+    $('#this-month-rate').textContent = percent(stats.current.rate);
+    $('#last-month-completed').textContent = stats.previous.completed ? stats.previous.completed : 'No previous-month data';
+    $('#last-month-rate').textContent = stats.previous.completed ? percent(stats.previous.rate) : 'No previous-month data';
+    const delta = (number, suffix) => number === null ? '' : `${number > 0 ? '↑ +' : number < 0 ? '↓ ' : ''}${suffix === 'pp' ? number.toFixed(1) : number} ${suffix}`;
+    $('#completed-change').textContent = delta(stats.countChange, 'orders');
+    $('#rate-change').textContent = delta(stats.rateChange, 'pp');
+    $('#monthly-limitations').textContent = [stats.missingTimes ? `${stats.missingTimes} legacy completion records have no valid completion time and are excluded from monthly comparisons.` : '', stats.uncertainHistory ? `${stats.uncertainHistory} legacy completions have incomplete issue history; they are not counted as issue-free.` : ''].filter(Boolean).join(' ');
+    $('#monthly-comparison').hidden = state.role !== 'Supervisor';
+    $('#overview-body').innerHTML = [S.PROCESSING, S.HANDLED, S.CLOSED].map(status => `<div class="overview-row">${badge(status)}<span>${state.issues.filter(issue => W.overallStatus(issue) === status).length}</span></div>`).join('');
+  }
+  function render() { renderShell(); document.querySelectorAll('.app-view').forEach(section => section.hidden = section.dataset.view !== page); if (page === 'orders') renderOrders(); if (page === 'details') renderDetails(); if (page === 'issues') renderIssues(); if (page === 'dashboard') renderDashboard(); }
+
+  function refreshButtons(busy) { document.querySelectorAll('[data-action="refresh"]').forEach(button => { button.disabled = busy; button.textContent = busy ? 'Loading…' : '↻ Refresh'; }); }
+  async function loadSap(fresh = false) {
+    if (loading) return;
+    loading = true; refreshButtons(true);
+    const message = $(`#sap-message-${page === 'dashboard' ? 'dashboard' : 'orders'}`); message.hidden = false; message.className = 'data-message loading'; message.textContent = 'Loading orders…';
+    try {
+      sap = await fetchSapOrders();
+      message.hidden = true;
+      if (fresh) notify('Data refreshed.');
+    } catch (error) {
+      sap = null; message.className = 'data-message error'; message.textContent = error.message || 'Order data could not be loaded. Try Refresh. Local records remain available.';
+    } finally { loading = false; refreshButtons(false); render(); }
+  }
+  async function loadOrder() {
+    if (!orderId) { $('#sap-message-details').hidden = false; $('#sap-message-details').textContent = 'Choose an order from Orders.'; return; }
+    const completion = state.completed[orderId];
+    order = { id: orderId, items: [], itemsComplete: false }; refreshButtons(true); renderDetails();
+    try {
+      const data = await fetchSapOrders(orderId);
+      if (completion?.items) {
+        order = { id: orderId, items: completion.items, itemsComplete: true };
+        $('#sap-message-details').hidden = true;
+      } else { order = { ...(data.orders[0] || { id: orderId, items: [] }), itemsComplete: data.complete }; }
+      if (!order.itemsComplete) order.loadError = 'Some order items could not be loaded. Try Refresh before continuing.';
+    } catch {
+      if (completion?.items) {
+        order = { id: orderId, items: completion.items, itemsComplete: true };
+        $('#sap-message-details').hidden = true;
+      } else order.loadError = completion?.legacy ? 'Legacy completion preserved. Original item details are unavailable; try Refresh later.' : 'Order items could not be loaded. Try Refresh.';
+    } finally { refreshButtons(false); renderDetails();  }
+  }
+
+  function updateReportType() {
+    const type = $('#issue-type').value;
+    $('#issue-type-help').textContent = type === QUALITY ? 'For damaged, expired, spoiled or otherwise unsafe products.' : 'For an empty shelf or too few items to complete the order.';
+    $('#auto-route-note').textContent = `Automatically categorised for ${W.recommendedTeam(type)} · In Progress.`;
+  }
+  function openReport(id) {
+    reportingItem = order?.items.find(item => item.id === id); if (!reportingItem) return;
+    $('#report-form').reset(); $('#report-order').value = order.id; $('#report-order-item').value = reportingItem.id;
+    $('#report-product').value = reportingItem.productId || ''; $('#report-description').value = reportingItem.description || '';
+    $('#report-error').hidden = true; updateReportType(); $('#report-dialog').showModal();
+  }
+  function focusIssue(id) {
+    focusedIssue = id; $('#issue-filter').value = state.issues.find(issue => issue.id === id)?.status === S.CLOSED ? 'closed' : 'active'; $('#issue-search').value = ''; renderIssues();
+    const card = document.getElementById(id); card?.scrollIntoView({ block: 'center', behavior: 'smooth' }); card?.focus({ preventScroll: true });
+  }
+  function formError(form, message) {
+    let node = form.querySelector('.form-error');
+    if (!node) { node = document.createElement('p'); node.className = 'form-error'; node.setAttribute('role', 'alert'); form.append(node); }
+    node.textContent = message;
+  }
+  $('#role')?.addEventListener('change', event => {
+    const role = event.target.value;
+    if (!act(() => store.setRole(role), `Viewing as ${role}.`)) return;
+    if (role === 'Supervisor' && page === 'orders') navigate('dashboard');
+  });
+  $('#reset-demo')?.addEventListener('click', () => $('#reset-dialog')?.showModal());
+  $('#reset-confirm')?.addEventListener('click', () => { if (act(() => store.reset(), 'Local prototype records reset. SAP data and configuration were not changed.')) $('#reset-dialog').close(); });
+  $('#order-search')?.addEventListener('input', renderOrders); $('#order-filter')?.addEventListener('change', renderOrders);
+  $('#issue-search')?.addEventListener('input', renderIssues); $('#issue-filter')?.addEventListener('change', renderIssues);
+  $('#issue-type')?.addEventListener('change', updateReportType);
+  document.addEventListener('change', event => {
+    const form = event.target.closest('form'); if (!form) return;
+    if (!form.matches('.treatment-form') || event.target.name !== 'kind') return;
+    const kind=value(form,'kind');
+    form.querySelector('.substitute-fields').hidden=kind!=='SUBSTITUTE';
+    form.querySelector('[name="substitute"]').required=kind==='SUBSTITUTE';
+    form.querySelector('.agreement-field').hidden=kind==='ORIGINAL';
+    form.querySelector('[name="agreement"]').required=kind!=='ORIGINAL';
+  });
+  document.addEventListener('click', event => {
+    const button = event.target.closest('[data-action]'); if (!button || button.disabled) return;
+    const { action, issue, item } = button.dataset;
+    if (action === 'refresh') page === 'details' ? loadOrder() : loadSap(true);
+    else if (action === 'cancel-dialog') button.closest('dialog').close();
+    else if (action === 'report') openReport(item);
+    else if (action === 'remove-item') act(() => store.confirmRemoval(order,item), 'Removal confirmed and issue closed. This item was not marked Picked.');
+    else if (action === 'complete') {
+      if (act(() => store.complete(order))) { const doneId = order.id; navigate('orders'); $('#order-filter').value = 'completed'; renderOrders(); notify(`Order #${doneId} completed.`); }
+    }
+  });
+  document.addEventListener('change', event => {
+    const checkbox = event.target.closest('input[type="checkbox"][data-action="pick"]');
+    if (!checkbox) return;
+    const item = checkbox.dataset.item;
+    if (checkbox.checked) act(() => store.pick(order, item, checkbox.dataset.substitute === 'true'), 'Item picked. Any handled issue for this item is now closed.');
+    else act(() => store.unpick(order, item), 'Pick undone. You can pick this item again.');
+  });
+  $('#report-form')?.addEventListener('submit', event => {
+    event.preventDefault();
+    try {
+      const id = store.report(order, reportingItem.id, $('#issue-type').value, $('#issue-description').value);
+      read(); render(); $('#report-dialog').close();
+      notify('Issue is In Progress. Supervisor can record the responsible team’s result.', false, issueLink(id));
+    } catch (error) { $('#report-error').textContent = error.message; $('#report-error').hidden = false; }
+  });
+  $('#issues-list')?.addEventListener('submit', event => {
+    const form = event.target; if (!form.matches('form')) return; event.preventDefault();
+    const id = form.dataset.issue;
+    try {
+      if (form.matches('.treatment-form')) store.saveResult(id,{type:value(form,'type'),itemId:value(form,'itemId'),kind:value(form,'kind'),notes:value(form,'notes'),substitute:value(form,'substitute'),agreement:checked(form,'agreement')});
+      else return;
+      read(); render(); focusIssue(id); notify('Record saved. The next available action is shown on the issue.');
+    } catch (error) { formError(form, error.message); }
+  });
+  window.addEventListener('storage', event => { if ([W.STORAGE_KEY, ...W.PREVIOUS_KEYS, null].includes(event.key) && read()) render(); });
+  window.addEventListener('hashchange', () => routeHash());
+  function navigate(view) { page = view; orderId = null; focusedIssue = null; render(); }
+  function routeHash() {
+    const raw = location.hash.slice(1);
+    if (raw.startsWith('open-order/')) {
+      const [encodedId, queryString=''] = raw.slice('open-order/'.length).split('?');
+      orderId = decodeURIComponent(encodedId); page = 'details';
+      const params = new URLSearchParams(queryString); render(); loadOrder();
+      if (params.has('item')) setTimeout(() => document.getElementById(`item-${CSS.escape(params.get('item'))}`)?.scrollIntoView({block:'center'}), 300);
+      return;
+    }
+    if (raw.startsWith('view=')) {
+      const params = new URLSearchParams(raw); page = params.get('view') || 'orders'; focusedIssue = params.get('issue'); orderId = params.get('order');
+      if (page === 'issues' && focusedIssue) $('#issue-filter').value = state.issues.find(issue => issue.id === focusedIssue)?.status === S.CLOSED ? 'closed' : 'active';
+      render();
+      if (page === 'issues' && focusedIssue) setTimeout(() => document.getElementById(focusedIssue)?.scrollIntoView({block:'center'}), 0);
+      return;
+    }
+    page = 'orders'; render();
+  }
+  function fetchSapOrders(filterOrder = null) {
+    return (async () => {
+      let next = new URL(`${SAP_SERVICE_URL}/SalesOrderItem`);
+      next.searchParams.set('$top', '1000');
+      if (filterOrder) next.searchParams.set('$filter', `SalesOrder eq '${filterOrder.replace(/'/g, "''")}'`);
+      const firstOrigin = next.origin, seen = new Set(), rows = [];
+      while (next) {
+        if (next.origin !== firstOrigin || seen.has(next.href)) throw new Error('SAP returned an invalid pagination link.');
+        seen.add(next.href);
+        const response = await fetch(next.href, { headers: { APIKey: SAP_API_KEY, Accept: 'application/json' }, cache: 'no-store' });
+        if (!response.ok) throw new Error(`SAP returned HTTP ${response.status}. Check the API key, API access and endpoint.`);
+        const data = await response.json();
+        if (!Array.isArray(data.value)) throw new Error('SAP returned an unexpected OData response.');
+        rows.push(...data.value);
+        next = data['@odata.nextLink'] ? new URL(data['@odata.nextLink'], next) : null;
+      }
+      const grouped = new Map();
+      for (const row of rows) {
+        if (row.SalesOrder == null || row.SalesOrderItem == null) continue;
+        const id = String(row.SalesOrder), itemId = String(row.SalesOrderItem);
+        if (!grouped.has(id)) grouped.set(id, {id, items: []});
+        const items = grouped.get(id).items;
+        if (items.some(item => item.id === itemId)) continue;
+        items.push({ id: itemId, productId: row.Product == null ? '' : String(row.Product), description: String(row.SalesOrderItemText || row.ProductDescription || row.ProductName || ''), quantity: row.RequestedQuantity ?? row.OrderQuantity ?? null, unit: String(row.RequestedQuantityISOUnit || row.RequestedQuantityUnit || row.OrderQuantityUnit || ''), sapFields: Object.fromEntries(['SalesOrder','SalesOrderItem','Product','SalesOrderItemText','RequestedQuantity','RequestedQuantityISOUnit','RequestedQuantityUnit','OrderQuantity','OrderQuantityUnit','NetAmount','TransactionCurrency','NetPriceAmount','NetPriceQuantity','NetPriceQuantityUnit'].filter(field => row[field] !== undefined && row[field] !== null).map(field => [field,row[field]]))});
+      }
+      return {orders:[...grouped.values()], complete:true};
+    })();
+  }
+  document.addEventListener('click', event => {
+    const anchor = event.target.closest('a[href]'); if (!anchor) return;
+    const href = anchor.getAttribute('href') || '';
+    if (href.startsWith('#open-order/')) { event.preventDefault(); location.hash = href.slice(1); routeHash(); }
+    else if (href.startsWith('#view=')) { event.preventDefault(); location.hash = href.slice(1); routeHash(); }
+  });
+  if (read()) { routeHash(); render(); }
+  loadSap();
+}());
+
+</script></body>
 </html>

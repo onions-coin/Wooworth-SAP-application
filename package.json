@@ -1,9 +1,0 @@
-{
-  "name": "woolworths-order-assistant",
-  "version": "2.0.0",
-  "private": true,
-  "description": "INFOSYS 704 assignment prototype: SAP orders and local exception handling",
-  "engines": { "node": ">=18.18" },
-  "scripts": { "start": "node server.js" },
-  "dependencies": { "express": "^5.3.0" }
-}
