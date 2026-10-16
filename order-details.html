@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en-NZ">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#178841">
+    <meta name="description"
+        content="Woolworths NZ order fulfilment exception assistant — INFOSYS 704 university prototype.">
+    <title>Order Details · Woolworths Order Assistant</title>
+    <link rel="icon"
+        href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' rx='10' fill='%23178841'/%3E%3Ctext x='8' y='29' font-size='28' fill='white'%3EW%3C/text%3E%3C/svg%3E">
+    <link rel="stylesheet" href="style.css">
+    <script src="workflow.js" defer></script>
+    <script src="app.js" defer></script>
+</head>
+
+<body data-page="details"><a class="skip-link" href="#main">Skip to content</a>
+    <header class="site-header">
+        <div class="nav-inner"><a class="brand" href="index.html"><img class="brand-icon" src="https://www.woolworths.co.nz/assets/images/express/logo-wapple-green.svg" alt="Woolworths"/><span>Woolworths<span class="brand-subtitle">Order Assistant</span></span></a>
+            <nav aria-label="Main navigation"><a href="index.html" aria-current="page">Orders</a><a
+                    href="issues.html"><span id="issues-nav-label">Issues</span> <span id="issue-count"
+                        class="nav-count" hidden>0</span></a><a href="dashboard.html">Dashboard</a></nav>
+            <div class="role-control"><span class="role-label">View as</span><label class="sr-only" for="role">Current
+                    role</label><select id="role">
+                    <option>Picker</option>
+                    <option>Supervisor</option>
+                </select></div>
+        </div>
+    </header>
+    <main id="main"><a class="back-link" href="index.html">← Back to Orders</a>
+        <section class="page-heading">
+            <div>
+                <p class="eyebrow">PICKING WORKSPACE</p>
+                <h1 id="order-title">Order Details</h1>
+                <p id="role-instruction"></p>
+            </div>
+        </section>
+        <div id="sap-message" class="data-message" role="status" hidden></div>
+        <section id="order-details" class="details-panel" aria-labelledby="details-title">
+            <div class="details-header">
+                <div>
+                    <p class="eyebrow">PICKING DETAILS</p>
+                    <h2 id="details-title" tabindex="-1"></h2>
+                    <p class="subtle" id="details-progress"></p>
+                </div>
+                <div class="details-header-actions"><span id="details-status"></span><a class="inline-link"
+                        id="order-issues-link" href="issues.html">View Order Issues →</a></div>
+            </div>
+            <div id="products"></div>
+            <div class="details-footer">
+                <p id="completion-help" class="subtle"></p><button class="button" id="complete-order"
+                    data-action="complete">Complete Order</button>
+            </div>
+        </section>
+        <dialog id="report-dialog" aria-labelledby="report-title">
+            <form id="report-form" class="dialog-body">
+                <p class="eyebrow">FULFILMENT EXCEPTION</p>
+                <h2 id="report-title">Report a product issue</h2>
+                <details class="report-context">
+                    <summary>Order and product details · filled automatically</summary>
+                    <div class="form-grid"><label>SAP Sales Order ID<input id="report-order" readonly></label><label>SAP
+                            Sales Order Item ID<input id="report-order-item" readonly></label></div><label>Product
+                        ID<input id="report-product" readonly></label><label>Original product description<input
+                            id="report-description" readonly></label>
+                </details><label for="issue-type">Issue type</label><select id="issue-type" required>
+                    <option value="Stock Availability Mismatch">Shelf out of stock / low quantity</option>
+                    <option value="Product Quality Issue">Product quality problem</option>
+                </select><p id="issue-type-help" class="subtle"></p>
+                <p id="auto-route-note" class="auto-route-note"></p><label for="issue-description">Short description
+                    (optional)</label><textarea id="issue-description" rows="2" maxlength="1200"
+                    placeholder="Add useful details for the handling teams."></textarea>
+
+                <p id="report-error" class="form-error" role="alert" hidden></p>
+                <div class="dialog-actions"><button class="button secondary" type="button"
+                        data-action="cancel-dialog">Cancel</button><button class="button" type="submit">Submit
+                        Issue</button></div>
+            </form>
+        </dialog>
+    </main>
+    <footer class="site-footer">
+        <div><span class="footer-role">Current role:
+                <strong id="current-role">Picker</strong></span></div>
+        <button class="button secondary small" type="button" id="reset-demo">Reset Demo</button>
+    </footer>
+    <dialog id="reset-dialog" aria-labelledby="reset-title"><div class="dialog-body"><p class="eyebrow">RESET DEMO</p><h2 id="reset-title">Clear local demo data?</h2><p>This removes this app’s saved orders, issues and picking progress from this browser. SAP data is not changed.</p><div class="dialog-actions"><button class="button secondary" type="button" data-action="cancel-dialog">Cancel</button><button class="button danger" type="button" id="reset-confirm">Clear Local Data</button></div></div></dialog>
+
+    <div id="notification" class="notification" role="status" aria-live="polite" hidden></div>
+</body>
+
+</html>
